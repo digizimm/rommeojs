@@ -55,14 +55,14 @@ CC.init = function(matchConfig) {
     // Temporarily saves card info objects for every distributed card
     CC.distributedCardsInfos = [];
     // Will hold every card info object
-    CC.cardsInfos = [];
+    CC.cardRegistry = [];
     // Semantic position infos
     CC.semanticPosInfos = [];
     // Setup default semantic registry
     CC.semanticPosInfos["unused_stack"] = [];
     // Setup default card info object for each card and add it to default semantic registry
     for (let i=1; i<=matchConfig.cards; i++) {
-        CC.cardsInfos[i] = {
+        CC.cardRegistry[i] = {
             id: i,
             picture: null,
             pos: {top: null, left: null},
@@ -72,7 +72,7 @@ CC.init = function(matchConfig) {
             z_index: (i % CC.matchConfig.cardsPerPlayer === 0) ? CC.matchConfig.cardsPerPlayer : i % CC.matchConfig.cardsPerPlayer
         };
         // Add card to default semantic registry
-        CC.semanticPosInfos["unused_stack"].push(CC.cardsInfos[i]);
+        CC.semanticPosInfos["unused_stack"].push(CC.cardRegistry[i]);
     }
     // Extend user object with a got-all-initial-cards flag
     for (let i=0; i<CC.matchConfig.users.length; i++) {
@@ -80,8 +80,8 @@ CC.init = function(matchConfig) {
     }
 }
 
-CC.getCardsInfos = function() {
-    return CC.cardsInfos;
+CC.getCardRegistry = function() {
+    return CC.cardRegistry;
 }
 
 CC.distributeCards = function(cbsInfos) {
@@ -191,7 +191,7 @@ CC.addFirstCardToTrayStack = function(picture) {
     CC.moveCard(deckCard, {target: "tray_area_stack_1", new_order: [1]});
 
     // Update semantic position for new tray stack card
-    CC.cardsInfos[deckCard.id].semantic_pos = "tray_stack";
+    CC.cardRegistry[deckCard.id].semantic_pos = "tray_stack";
 
     CC.attachCbOnCardMove({
         on: "deck_to_tray_stack",
@@ -222,9 +222,9 @@ CC.attachCbOnCardMove = function(cbsInfos) {
 }
 
 CC.getCardInfoFromDeck = function() {
-    for (let i=1; i<CC.cardsInfos.length; i++) {
-        if (CC.cardsInfos[i].semantic_pos === "unused_stack") {
-            return CC.cardsInfos[i];
+    for (let i=1; i<CC.cardRegistry.length; i++) {
+        if (CC.cardRegistry[i].semantic_pos === "unused_stack") {
+            return CC.cardRegistry[i];
         }
     }
 }
@@ -289,10 +289,10 @@ CC.moveCard = function(cardInfo, options) {
 
     let x = 0;
     // Update the order position of the remaining card info objects in this semantic registry set
-    for (let i=1; i<CC.cardsInfos.length; i++) {
-        if (CC.cardsInfos[i].semantic_pos === cardInfo.semantic_pos && CC.cardsInfos[i].id !== cardInfo.id) {
+    for (let i=1; i<CC.cardRegistry.length; i++) {
+        if (CC.cardRegistry[i].semantic_pos === cardInfo.semantic_pos && CC.cardRegistry[i].id !== cardInfo.id) {
             x++;
-            CC.cardsInfos[i].order_pos = x;
+            CC.cardRegistry[i].order_pos = x;
         }
     }
 
@@ -400,10 +400,10 @@ CC.rerenderGamefield = function() {
 
 
     /** Reposition and resie all cards */
-    for (let i=1; i<CC.cardsInfos.length; i++) {
+    for (let i=1; i<CC.cardRegistry.length; i++) {
         // Count the amount of cards which are already in the related semantic position
         // This is a necessity for calculating the card-to-card distances
-        let countedCards = (CC.semanticPosInfos[CC.cardsInfos[i].semantic_pos]) ? (CC.semanticPosInfos[CC.cardsInfos[i].semantic_pos].length > CC.matchConfig.cardsPerPlayer) ? CC.matchConfig.cardsPerPlayer : CC.semanticPosInfos[CC.cardsInfos[i].semantic_pos].length + 1 : CC.matchConfig.cardsPerPlayer;
+        let countedCards = (CC.semanticPosInfos[CC.cardRegistry[i].semantic_pos]) ? (CC.semanticPosInfos[CC.cardRegistry[i].semantic_pos].length > CC.matchConfig.cardsPerPlayer) ? CC.matchConfig.cardsPerPlayer : CC.semanticPosInfos[CC.cardRegistry[i].semantic_pos].length + 1 : CC.matchConfig.cardsPerPlayer;
 
         // Set new card-to-card distance for vertical aligned cards
         if (optCardDistOpp * CC.matchConfig.cardsPerPlayer + CC.cardWidth > gamefieldSize.height - (CC.verticalCardsPadding*2)) {
@@ -438,7 +438,7 @@ CC.rerenderGamefield = function() {
         CC.gapToFirstOppVerticalCard = (parseInt($(".gamefield").height()) - (countedCards * CC.distanceBetweenCardsAtOpponentsHandY + (CC.cardWidth - CC.distanceBetweenCardsAtOpponentsHandY))) / 2 - CC.distanceBetweenCardsAtOpponentsHandY;
 
         /** Reposition and resize the related card */
-        CC.updateCard(CC.cardsInfos[i]);
+        CC.updateCard(CC.cardRegistry[i]);
     }
 
     /** Reposition and resize tray area */
@@ -461,8 +461,8 @@ CC.updateCard = function(cardInfo) {
     let newPos = CC.calculateCardPosition(cardInfo);
 
     let unused = 0;
-    for (let i=1; i<CC.cardsInfos.length; i++) {
-        if (CC.cardsInfos[i].semantic_pos === "unused_stack") {
+    for (let i=1; i<CC.cardRegistry.length; i++) {
+        if (CC.cardRegistry[i].semantic_pos === "unused_stack") {
             unused++;
         }
     }
@@ -483,10 +483,10 @@ CC.updateCard = function(cardInfo) {
  * @returns {string[]} A string with all card html elements
  */
 CC.generateCardElems = function() {
-    let cardElems = CC.cardsInfos.map( (card, i) => {
-        return '<div class="scene" id="card-' + CC.cardsInfos[(CC.cardsInfos.length - i)].id + '" style="z-index: 99; top: calc(50% + 12px - ' + (i*0.2) + 'px);">' +
+    let cardElems = CC.cardRegistry.map( (card, i) => {
+        return '<div class="scene" id="card-' + CC.cardRegistry[(CC.cardRegistry.length - i)].id + '" style="z-index: 99; top: calc(50% + 12px - ' + (i*0.2) + 'px);">' +
                     '<div class="card">' +
-                        '<div class="card__face card__face--front"><p>' + CC.cardsInfos[(CC.cardsInfos.length - i)].id + '</p></div>' +
+                        '<div class="card__face card__face--front"><p>' + CC.cardRegistry[(CC.cardRegistry.length - i)].id + '</p></div>' +
                         '<div class="card__face card__face--back"></div>' +
                     '</div>' +
                 '</div>';
