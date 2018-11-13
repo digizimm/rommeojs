@@ -168,14 +168,17 @@ CC.calculateCardPosition = function(cardInfo) {
     return {top: top, left: left};
 }
 
-CC.addFirstCardToTrayStack = function() {
+CC.addFirstCardToTrayStack = function(picture) {
     // Get the card object for the very first card on the deck
     let deckCard = CC.getCardInfoFromDeck();
     deckCard.semantic_move = "deck_to_tray_stack";
+    deckCard.picture = picture;
+    let trayStackPos = {top: $(".drop-staple").css("top"), left: $(".drop-staple").css("left")};
+    deckCard.pos = trayStackPos;
+    CC.moveCard(deckCard, {target: "tray_area_stack_1", order_pos: 1});
+
     // Update semantic position for new tray stack card
     CC.cardsInfos[deckCard.id].semantic_pos = "tray_stack";
-    // Animates the card to the tray stack
-    CC.addCardToTrayStack(deckCard);
 
     CC.attachCbOnCardMove({
         on: "deck_to_tray_stack",
@@ -198,15 +201,6 @@ CC.onFirstDeckToTrayStackCard = function(cardInfo) {
     $("#card-" + cardInfo.id).find(".card").addClass("highlight-card");
     cardInfo = CC.getCardInfoFromDeck();
     $("#card-" + cardInfo.id).find(".card").addClass("highlight-card");
-}
-
-CC.addCardToTrayStack = function(cardInfo) {
-    // Get the tray stack position
-    let trayStackPos = {top: $(".drop-staple").css("top"), left: $(".drop-staple").css("left")};
-    // Set tray stack position as new card position
-    cardInfo.pos = trayStackPos;
-    // Animate card to tray stack
-    CC.moveCardToPos(cardInfo);
 }
 
 CC.attachCbOnCardMove = function(cbsInfos) {
@@ -244,7 +238,6 @@ CC.moveCard = function(cardInfo, options) {
     }
 
     /** Update the card info object with its new coordinates, semantic position and order position */
-    cardInfo.pos = {top: 100, left: 250 + (options.order_pos * CC.optimalDistanceBetweenCardsAtOpponentsHand)};
     cardInfo.semantic_pos = options.target;
     cardInfo.order_pos = options.order_pos;
 
@@ -329,7 +322,7 @@ CC.moveCardToPos = function(cardInfo, options) {
                 // Trigger the appropriate callbacks
                 CC.onCardMoved(cardInfo);
                 // Update the card elemnents z-index
-                $("#card-" + cardInfo.id).css("z-index", cardInfo.z_index);
+                $("#card-" + cardInfo.id).css("z-index", cardInfo.id);
             }
         });
 

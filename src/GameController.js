@@ -80,7 +80,7 @@ GC.onCardDistributionFinished = (cardsInfos) => {
     GC.applyEventHandlers(cardsInfos);
 
     // Show first tray stack card
-    GC.CardsController.addFirstCardToTrayStack();
+    GC.CardsController.addFirstCardToTrayStack(nine_of_clubs);
 
     // Testing the moveCard function...
     $("#test-move-btn").click(function() {
