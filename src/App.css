@@ -1,0 +1,38 @@
+.gamefield {
+    position: relative;
+    width: 100%;
+    height: 550px;
+    overflow: hidden;
+    resize: vertical;
+    background: url("./cards/png/bg.png") no-repeat;
+    background-size: cover;
+}
+
+.tray-area {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.01);
+}
+
+.sorted-staple {
+    position: absolute;
+    top: calc(50% + 12px);
+    left: 100px;
+    width: 86px;
+    height: 125px;
+    border-radius: 10px;
+    border: 2px rgba(255, 255, 255, 0.3) solid;
+}
+
+.drop-staple {
+    position: absolute;
+    top: calc(50% - 160px);
+    left: 100px;
+    width: 86px;
+    height: 125px;
+    border: 2px rgba(255, 255, 255, 0.3) solid;
+    border-radius: 10px;
+}
+
+#start-game-btn {
+    position: absolute;
+}
