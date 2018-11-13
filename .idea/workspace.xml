@@ -4,7 +4,9 @@
     <bookmark url="file://$PROJECT_DIR$/src/CardsController.js" line="190" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2489e994-e65e-43b9-a74d-922e687c6d25" name="Default" comment="" />
+    <list default="true" id="2489e994-e65e-43b9-a74d-922e687c6d25" name="Default" comment="">
+      <change beforePath="$PROJECT_DIR$/src/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.js" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -14,11 +16,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="App.js" pinned="false" current-in-tab="false">
+      <file leaf-file-name="App.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/App.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="193">
-              <caret line="17" column="43" selection-start-line="17" selection-start-column="43" selection-end-line="17" selection-end-column="43" />
+            <state relative-caret-position="176">
+              <caret line="16" column="55" selection-start-line="16" selection-start-column="55" selection-end-line="16" selection-end-column="55" />
               <folding>
                 <element signature="e#0#26#0" expanded="true" />
                 <element signature="n#!!block;n#startGame#0;n#App#0" />
@@ -27,11 +29,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="App.css" pinned="false" current-in-tab="true">
+      <file leaf-file-name="App.css" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/App.css">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="204">
-              <caret line="12" column="32" lean-forward="true" selection-start-line="12" selection-start-column="32" selection-end-line="12" selection-end-column="33" />
+              <caret line="12" column="34" selection-start-line="12" selection-start-column="34" selection-end-line="12" selection-end-column="34" />
             </state>
           </provider>
         </entry>
@@ -60,7 +62,6 @@
                 <element signature="e#11827#11930#0" />
                 <element signature="e#12130#12275#0" />
                 <element signature="e#12229#12742#0" />
-                <element signature="n#style#0;n#div#0;n#!!top" expanded="true" />
                 <element signature="e#13165#13393#0" />
                 <element signature="e#8645#15338#0" />
               </folding>
@@ -126,6 +127,9 @@
       <find>$</find>
     </findStrings>
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
@@ -143,10 +147,10 @@
         <option value="$PROJECT_DIR$/src/config.js" />
         <option value="$PROJECT_DIR$/cards/index.js" />
         <option value="$PROJECT_DIR$/src/Card.css" />
-        <option value="$PROJECT_DIR$/src/App.css" />
-        <option value="$PROJECT_DIR$/src/App.js" />
         <option value="$PROJECT_DIR$/src/GameController.js" />
         <option value="$PROJECT_DIR$/src/CardsController.js" />
+        <option value="$PROJECT_DIR$/src/App.css" />
+        <option value="$PROJECT_DIR$/src/App.js" />
       </list>
     </option>
   </component>
@@ -171,6 +175,7 @@
     <option name="width" value="941" />
     <option name="height" value="849" />
   </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
@@ -239,12 +244,12 @@
       <updated>1541678190149</updated>
       <workItem from="1541678194056" duration="45592000" />
       <workItem from="1541855124758" duration="62075000" />
-      <workItem from="1542001398003" duration="61332000" />
+      <workItem from="1542001398003" duration="61946000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="168999000" />
+    <option name="totallyTimeSpent" value="169613000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="985" y="0" width="941" height="849" extended-state="0" />
@@ -253,7 +258,7 @@
       <window_info anchor="bottom" id="TODO" order="12" />
       <window_info anchor="bottom" id="Event Log" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Database Changes" order="1" show_stripe_button="false" />
-      <window_info anchor="bottom" id="Version Control" order="4" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Version Control" order="4" />
       <window_info anchor="bottom" id="Run" order="8" />
       <window_info id="npm" order="1" side_tool="true" />
       <window_info anchor="bottom" id="Quokka" order="5" />
@@ -349,7 +354,6 @@
             <element signature="e#11827#11930#0" />
             <element signature="e#12130#12275#0" />
             <element signature="e#12229#12742#0" />
-            <element signature="n#style#0;n#div#0;n#!!top" expanded="true" />
             <element signature="e#13165#13393#0" />
             <element signature="e#8645#15338#0" />
           </folding>
@@ -547,17 +551,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/App.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="193">
-          <caret line="17" column="43" selection-start-line="17" selection-start-column="43" selection-end-line="17" selection-end-column="43" />
-          <folding>
-            <element signature="e#0#26#0" expanded="true" />
-            <element signature="n#!!block;n#startGame#0;n#App#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/GameController.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="302">
@@ -600,7 +593,6 @@
             <element signature="e#11827#11930#0" />
             <element signature="e#12130#12275#0" />
             <element signature="e#12229#12742#0" />
-            <element signature="n#style#0;n#div#0;n#!!top" expanded="true" />
             <element signature="e#13165#13393#0" />
             <element signature="e#8645#15338#0" />
           </folding>
@@ -610,7 +602,18 @@
     <entry file="file://$PROJECT_DIR$/src/App.css">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="204">
-          <caret line="12" column="32" lean-forward="true" selection-start-line="12" selection-start-column="32" selection-end-line="12" selection-end-column="33" />
+          <caret line="12" column="34" selection-start-line="12" selection-start-column="34" selection-end-line="12" selection-end-column="34" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/App.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="176">
+          <caret line="16" column="55" selection-start-line="16" selection-start-column="55" selection-end-line="16" selection-end-column="55" />
+          <folding>
+            <element signature="e#0#26#0" expanded="true" />
+            <element signature="n#!!block;n#startGame#0;n#App#0" />
+          </folding>
         </state>
       </provider>
     </entry>

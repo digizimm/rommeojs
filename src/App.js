@@ -14,7 +14,7 @@ class App extends React.Component {
             users: [
                 {
                     userid: 481,
-                    username: "danny",
+                    username: "danny_teständerungfürgit",
                     table_pos: "player_hand"
                 },
                 {
