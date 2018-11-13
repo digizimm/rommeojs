@@ -2,6 +2,7 @@ import CardsController from './CardsController';
 import $ from "jquery";
 import './Card.css';
 import { RommeoConfig } from './config';
+import six_of_clubs from "./cards/png/6_of_clubs.png";
 import nine_of_clubs from "./cards/png/9_of_clubs.png";
 import ten_of_clubs from "./cards/png/10_of_clubs.png";
 import jack_of_clubs from "./cards/png/jack_of_clubs.png";
@@ -82,26 +83,54 @@ GC.onCardDistributionFinished = (cardsInfos) => {
     // Show first tray stack card
     GC.CardsController.addFirstCardToTrayStack(nine_of_clubs);
 
+    $("#receiver-test").click(function() {
+
+        let received = {
+            moves: [
+                {
+                    cardId: 1,
+                    picture: six_of_clubs,
+                    semantic_pos: "tray_area_stack_1",
+                    new_order: [1, 2, 3] // card ids
+                }
+            ]
+        };
+
+        // Prepare card move
+        GC.CardsController.cardsInfos[received.moves[0].cardId].picture = received.moves[0].picture;
+        GC.CardsController.cardsInfos[received.moves[0].cardId].semantic_pos = received.moves[0].semantic_pos;
+        GC.CardsController.moveCard(GC.CardsController.cardsInfos[received.moves[0].cardId], {semantic_pos: received.moves[0].semantic_pos, new_order: received.moves[0].new_order})
+
+
+    });
+
     // Testing the moveCard function...
     $("#test-move-btn").click(function() {
         cardsInfos[0].picture = nine_of_clubs;
-        GC.CardsController.moveCard(cardsInfos[0], {target: "tray_area_stack_1", order_pos: 1});
+        cardsInfos[0].semantic_pos = "tray_area_stack_1";
+        GC.CardsController.moveCard(cardsInfos[0], {new_order: [1, 2, 3, 4, 5]});
 
         cardsInfos[1].picture = ten_of_clubs;
-        GC.CardsController.moveCard(cardsInfos[1], {target: "tray_area_stack_1", order_pos: 2});
+        cardsInfos[1].semantic_pos = "tray_area_stack_1";
+        GC.CardsController.moveCard(cardsInfos[1], {new_order: [1, 2, 3, 4, 5]});
 
         cardsInfos[2].picture = jack_of_clubs;
-        GC.CardsController.moveCard(cardsInfos[2], {target: "tray_area_stack_1", order_pos: 3});
+        cardsInfos[2].semantic_pos = "tray_area_stack_1";
+        GC.CardsController.moveCard(cardsInfos[2], {new_order: [1, 2, 3, 4, 5]});
 
         cardsInfos[3].picture = queen_of_clubs;
-        GC.CardsController.moveCard(cardsInfos[3], {target: "tray_area_stack_1", order_pos: 4});
+        cardsInfos[3].semantic_pos = "tray_area_stack_1";
+        GC.CardsController.moveCard(cardsInfos[3], {new_order: [1, 2, 3, 4, 5]});
 
-        cardsInfos[4].picture = king_of_clubs;
-        GC.CardsController.moveCard(cardsInfos[4], {target: "tray_area_stack_1", order_pos: 5});
+        cardsInfos[4].picture = king_of_clubs
+        cardsInfos[4].semantic_pos = "tray_area_stack_1";
+        GC.CardsController.moveCard(cardsInfos[4], {new_order: [1, 2, 3, 4, 5]});
 
         cardsInfos[5].picture = ace_of_clubs;
-        GC.CardsController.moveCard(cardsInfos[5], {target: "tray_area_stack_1", order_pos: 6});
+        cardsInfos[5].semantic_pos = "tray_area_stack_1";
+        GC.CardsController.moveCard(cardsInfos[5], { new_order: [1, 2, 3, 4, 5]});
     });
+
     // Testing the moveCard function...
     $("#test-move-btn2").click(function() {
         let selectedCardIds = [];
@@ -110,8 +139,8 @@ GC.onCardDistributionFinished = (cardsInfos) => {
         });
 
         for (let i=0; i<selectedCardIds.length; i++) {
-            GC.CardsController.cardsInfos[selectedCardIds[i]].picture = nine_of_clubs;
-            GC.CardsController.moveCard(GC.CardsController.cardsInfos[selectedCardIds[i]], {target: "tray_area_stack_1", order_pos: (i+1)});
+       //     GC.CardsController.cardsInfos[selectedCardIds[i]].picture = nine_of_clubs;
+       //     GC.CardsController.moveCard(GC.CardsController.cardsInfos[selectedCardIds[i]], {target: "tray_area_stack_1", order_pos: (i+1)});
         }
 
 

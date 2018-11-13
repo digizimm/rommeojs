@@ -175,7 +175,7 @@ CC.addFirstCardToTrayStack = function(picture) {
     deckCard.picture = picture;
     let trayStackPos = {top: $(".drop-staple").css("top"), left: $(".drop-staple").css("left")};
     deckCard.pos = trayStackPos;
-    CC.moveCard(deckCard, {target: "tray_area_stack_1", order_pos: 1});
+    CC.moveCard(deckCard, {target: "tray_area_stack_1", new_order: [1]});
 
     // Update semantic position for new tray stack card
     CC.cardsInfos[deckCard.id].semantic_pos = "tray_stack";
@@ -216,7 +216,31 @@ CC.getCardInfoFromDeck = function() {
     }
 }
 
+CC.generateCoordinatesFor = function(cardId, settings) {
+
+    let semanticAreaExists = false;
+    let trayStacksInfos = [];
+
+    console.log(CC.semanticPosInfos);
+    for (let i=0; i<CC.semanticPosInfos.length; i++) {
+        if (CC.semanticPosInfos.keys[i].indexOf("tray_stack_area")) {
+            console.log(CC.semanticPosInfos);
+        }
+
+        if (settings.target === CC.semanticPosInfos[i]) {
+            semanticAreaExists = true;
+        }
+    }
+
+    if (!semanticAreaExists) {
+        CC.semanticPosInfos[settings.target] = [];
+
+    }
+
+}
+
 CC.moveCard = function(cardInfo, options) {
+
     /** Inject card picture into card element */
     if (!cardInfo.revealed) {
         cardInfo.revealed = true;
@@ -239,7 +263,8 @@ CC.moveCard = function(cardInfo, options) {
 
     /** Update the card info object with its new coordinates, semantic position and order position */
     cardInfo.semantic_pos = options.target;
-    cardInfo.order_pos = options.order_pos;
+    cardInfo.order_pos = (options.new_order.indexOf(cardInfo.id) + 1);
+    let test = CC.generateCoordinatesFor(cardInfo.id, options);
 
     /** Animate card to new position after a short 100ms delay because card picture injection may not be finished yet */
     setTimeout(function(){
@@ -260,6 +285,8 @@ CC.moveCard = function(cardInfo, options) {
 CC.moveCardToPos = function(cardInfo, options) {
     // Set default options object if no options are submitted
     options = options ? options : { delay: 0, cb: false };
+
+    console.log(cardInfo);
 
     // Perform animation
     $("#card-" + cardInfo.id )
@@ -304,6 +331,7 @@ CC.moveCardToPos = function(cardInfo, options) {
             // Apply interaction Event Handlers for card if its players card
             complete: function() {
                 // Add the card info object to the semantic position registry
+                console.log(cardInfo.semantic_pos);
                 if (CC.semanticPosInfos[cardInfo.semantic_pos]) {
                     let found = false;
                     for (let i=0; i<CC.semanticPosInfos[cardInfo.semantic_pos].length; i++) {
@@ -317,6 +345,7 @@ CC.moveCardToPos = function(cardInfo, options) {
                 } else {
                     CC.semanticPosInfos[cardInfo.semantic_pos] = [cardInfo];
                 }
+
                 // Trigger a directly to this function passed callback if there was one received
                 if (options.cb) {options.cb();}
                 // Trigger the appropriate callbacks
