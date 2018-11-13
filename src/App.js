@@ -45,7 +45,7 @@ class App extends React.Component {
     render() {
         return (
             <div>
-                <h1>Rommeo.js 0.1.0</h1>
+                <h1>RommeoJS 0.1.0</h1>
                 <div className="gamefield">
                     <div className="drop-staple"></div>
                     <div className="sorted-staple"></div>

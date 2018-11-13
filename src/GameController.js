@@ -106,29 +106,35 @@ GC.onCardDistributionFinished = (cardsInfos) => {
 
     // Testing the moveCard function...
     $("#test-move-btn").click(function() {
-        cardsInfos[0].picture = nine_of_clubs;
-        cardsInfos[0].semantic_pos = "tray_area_stack_1";
-        GC.CardsController.moveCard(cardsInfos[0], {new_order: [1, 2, 3, 4, 5]});
+        GC.CardsController.cardsInfos[1].picture = nine_of_clubs;
+        GC.CardsController.cardsInfos[1].semantic_pos = "tray_area_stack_1";
+        GC.CardsController.cardsInfos[1].pos = {top: 200, left: (1*70)};
+        GC.CardsController.moveCard(GC.CardsController.cardsInfos[1], {new_order: [1, 2, 3, 4, 5]});
 
-        cardsInfos[1].picture = ten_of_clubs;
-        cardsInfos[1].semantic_pos = "tray_area_stack_1";
-        GC.CardsController.moveCard(cardsInfos[1], {new_order: [1, 2, 3, 4, 5]});
+        GC.CardsController.cardsInfos[2].picture = ten_of_clubs;
+        GC.CardsController.cardsInfos[2].semantic_pos = "tray_area_stack_1";
+        GC.CardsController.cardsInfos[2].pos = {top: 200, left: (2*70)};
+        GC.CardsController.moveCard(GC.CardsController.cardsInfos[2], {new_order: [1, 2, 3, 4, 5]});
 
-        cardsInfos[2].picture = jack_of_clubs;
-        cardsInfos[2].semantic_pos = "tray_area_stack_1";
-        GC.CardsController.moveCard(cardsInfos[2], {new_order: [1, 2, 3, 4, 5]});
+        GC.CardsController.cardsInfos[3].picture = jack_of_clubs;
+        GC.CardsController.cardsInfos[3].semantic_pos = "tray_area_stack_1";
+        GC.CardsController.cardsInfos[3].pos = {top: 200, left: (3*70)};
+        GC.CardsController.moveCard(GC.CardsController.cardsInfos[3], {new_order: [1, 2, 3, 4, 5]});
 
-        cardsInfos[3].picture = queen_of_clubs;
-        cardsInfos[3].semantic_pos = "tray_area_stack_1";
-        GC.CardsController.moveCard(cardsInfos[3], {new_order: [1, 2, 3, 4, 5]});
+        GC.CardsController.cardsInfos[4].picture = queen_of_clubs;
+        GC.CardsController.cardsInfos[4].semantic_pos = "tray_area_stack_1";
+        GC.CardsController.cardsInfos[4].pos = {top: 200, left: (4*70)};
+        GC.CardsController.moveCard(GC.CardsController.cardsInfos[4], {new_order: [1, 2, 3, 4, 5]});
 
-        cardsInfos[4].picture = king_of_clubs
-        cardsInfos[4].semantic_pos = "tray_area_stack_1";
-        GC.CardsController.moveCard(cardsInfos[4], {new_order: [1, 2, 3, 4, 5]});
+        GC.CardsController.cardsInfos[5].picture = king_of_clubs
+        GC.CardsController.cardsInfos[5].semantic_pos = "tray_area_stack_1";
+        GC.CardsController.cardsInfos[5].pos = {top: 200, left: (5*70)};
+        GC.CardsController.moveCard(GC.CardsController.cardsInfos[5], {new_order: [1, 2, 3, 4, 5]});
 
-        cardsInfos[5].picture = ace_of_clubs;
-        cardsInfos[5].semantic_pos = "tray_area_stack_1";
-        GC.CardsController.moveCard(cardsInfos[5], { new_order: [1, 2, 3, 4, 5]});
+        GC.CardsController.cardsInfos[6].picture = ace_of_clubs;
+        GC.CardsController.cardsInfos[6].semantic_pos = "tray_area_stack_1";
+        GC.CardsController.cardsInfos[6].pos = {top: 200, left: (6*70)};
+        GC.CardsController.moveCard(GC.CardsController.cardsInfos[6], { new_order: [1, 2, 3, 4, 5]});
     });
 
     // Testing the moveCard function...
