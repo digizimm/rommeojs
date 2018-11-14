@@ -51,9 +51,15 @@ class App extends React.Component {
                     <div className="sorted-staple"></div>
 
                     <button id="start-game-btn">Spiel starten</button>
-                    <button id="test-move-btn" style={{marginTop: "22px"}}>Make move</button>
-                    <button id="test-move-btn2" style={{marginTop: "50px"}}>Make move 2</button>
-                    <button id="receiver-test" style={{marginTop: "70px"}}>Make move 3</button>
+                    <button id="test-move-btn" style={{marginTop: "22px"}}>Move first 2</button>
+                    <br />
+                    <button id="test-move-btn2" style={{marginTop: "50px"}}>Move selected</button>
+                    <br />
+                    <button id="add-new-tray-area-stack">add new stack</button>
+                    <br />
+                    <button id="add-another-tray-area-stack">add another stack</button>
+                    <br />
+                    <button id="receiver-test" style={{marginTop: "70px"}}>Receiver test</button>
 
                 </div>
             </div>

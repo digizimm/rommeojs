@@ -88,53 +88,67 @@ GC.onCardDistributionFinished = (cardRegistry) => {
         let received = {
             moves: [
                 {
-                    cardId: 1,
+                    cardId: 9,
                     picture: six_of_clubs,
                     semantic_pos: "tray_area_stack_1",
-                    new_order: [1, 2, 3] // card ids
+                    new_order: [9] // card ids
                 }
             ]
         };
 
-        // Prepare card move
+        let options = {semantic_pos: received.moves[0].semantic_pos, new_order: received.moves[0].new_order};
+
+        // Find out the new card position
+        GC.CardsController.setCoordinatesFor(GC.CardsController.cardRegistry[received.moves[0].cardId], options);
+
+        // Set picture and semantic position for card
         GC.CardsController.cardRegistry[received.moves[0].cardId].picture = received.moves[0].picture;
         GC.CardsController.cardRegistry[received.moves[0].cardId].semantic_pos = received.moves[0].semantic_pos;
-        GC.CardsController.moveCard(GC.CardsController.cardRegistry[received.moves[0].cardId], {semantic_pos: received.moves[0].semantic_pos, new_order: received.moves[0].new_order})
+
+        // Move card
+        GC.CardsController.moveCard(GC.CardsController.cardRegistry[received.moves[0].cardId], options)
 
 
     });
 
-    // Testing the moveCard function...
     $("#test-move-btn").click(function() {
+        // Testing the moveCard function...
+        let options = {semantic_pos: "tray_area_stack_4", new_order: [1, 2]};
         GC.CardsController.cardRegistry[1].picture = nine_of_clubs;
-        GC.CardsController.cardRegistry[1].semantic_pos = "tray_area_stack_1";
-        GC.CardsController.cardRegistry[1].pos = {top: 200, left: (1*70)};
-        GC.CardsController.moveCard(GC.CardsController.cardRegistry[1], {new_order: [1, 2, 3, 4, 5]});
+        GC.CardsController.setCoordinatesFor(GC.CardsController.cardRegistry[1], options);
+        GC.CardsController.moveCard(GC.CardsController.cardRegistry[1], options);
 
         GC.CardsController.cardRegistry[2].picture = ten_of_clubs;
-        GC.CardsController.cardRegistry[2].semantic_pos = "tray_area_stack_1";
-        GC.CardsController.cardRegistry[2].pos = {top: 200, left: (2*70)};
-        GC.CardsController.moveCard(GC.CardsController.cardRegistry[2], {new_order: [1, 2, 3, 4, 5]});
+        GC.CardsController.setCoordinatesFor(GC.CardsController.cardRegistry[2], options);
+        GC.CardsController.moveCard(GC.CardsController.cardRegistry[2], options);
+    });
 
-        GC.CardsController.cardRegistry[3].picture = jack_of_clubs;
-        GC.CardsController.cardRegistry[3].semantic_pos = "tray_area_stack_1";
-        GC.CardsController.cardRegistry[3].pos = {top: 200, left: (3*70)};
-        GC.CardsController.moveCard(GC.CardsController.cardRegistry[3], {new_order: [1, 2, 3, 4, 5]});
+    $("#add-new-tray-area-stack").click(function() {
+        // Testing the moveCard function...
+        let options = {semantic_pos: "tray_area_stack_2", new_order: [4, 5]};
+        GC.CardsController.cardRegistry[4].picture = nine_of_clubs;
+        GC.CardsController.setCoordinatesFor(GC.CardsController.cardRegistry[4], options);
+        GC.CardsController.moveCard(GC.CardsController.cardRegistry[4], options);
 
-        GC.CardsController.cardRegistry[4].picture = queen_of_clubs;
-        GC.CardsController.cardRegistry[4].semantic_pos = "tray_area_stack_1";
-        GC.CardsController.cardRegistry[4].pos = {top: 200, left: (4*70)};
-        GC.CardsController.moveCard(GC.CardsController.cardRegistry[4], {new_order: [1, 2, 3, 4, 5]});
+        GC.CardsController.cardRegistry[5].picture = ten_of_clubs;
+        GC.CardsController.setCoordinatesFor(GC.CardsController.cardRegistry[5], options);
+        GC.CardsController.moveCard(GC.CardsController.cardRegistry[5], options);
+    });
 
-        GC.CardsController.cardRegistry[5].picture = king_of_clubs
-        GC.CardsController.cardRegistry[5].semantic_pos = "tray_area_stack_1";
-        GC.CardsController.cardRegistry[5].pos = {top: 200, left: (5*70)};
-        GC.CardsController.moveCard(GC.CardsController.cardRegistry[5], {new_order: [1, 2, 3, 4, 5]});
+    $("#add-another-tray-area-stack").click(function() {
+        // Testing the moveCard function...
+        let options = {semantic_pos: "tray_area_stack_3", new_order: [7, 8, 6]};
+        GC.CardsController.cardRegistry[7].picture = six_of_clubs;
+        GC.CardsController.setCoordinatesFor(GC.CardsController.cardRegistry[7], options);
+        GC.CardsController.moveCard(GC.CardsController.cardRegistry[7], options);
 
-        GC.CardsController.cardRegistry[6].picture = ace_of_clubs;
-        GC.CardsController.cardRegistry[6].semantic_pos = "tray_area_stack_1";
-        GC.CardsController.cardRegistry[6].pos = {top: 200, left: (6*70)};
-        GC.CardsController.moveCard(GC.CardsController.cardRegistry[6], { new_order: [1, 2, 3, 4, 5]});
+        GC.CardsController.cardRegistry[8].picture = nine_of_clubs;
+        GC.CardsController.setCoordinatesFor(GC.CardsController.cardRegistry[8], options);
+        GC.CardsController.moveCard(GC.CardsController.cardRegistry[8], options);
+
+        GC.CardsController.cardRegistry[6].picture = ten_of_clubs;
+        GC.CardsController.setCoordinatesFor(GC.CardsController.cardRegistry[6], options);
+        GC.CardsController.moveCard(GC.CardsController.cardRegistry[6], options);
     });
 
     // Testing the moveCard function...
@@ -210,19 +224,31 @@ GC.applyEventHandlers = function(cardRegistry) {
 
 }
 
+GC.fps = 1;
+GC.now = null;
+GC.then = Date.now();
+GC.interval = 1000/GC.fps;
+GC.delta = null;
+
 // Listens for window resizing so we can adjust the view
 GC.listenForBrowserResize = function() {
     window.requestAnimationFrame(() => {
 
-        let curBrowserWidth = parseInt($(window).width());
-        let curBrowserHeight = parseInt($(window).height());
+        GC.now = Date.now();
+        GC.delta = GC.now - GC.then;
 
-        /** Update card sizes and positions */
-        if ( curBrowserWidth !== GC.browserSize.width || curBrowserHeight !== GC.browserSize.height ) {
-            if (Math.abs(curBrowserWidth - GC.browserSize.width) > 10 || Math.abs(curBrowserHeight - GC.browserSize.height) > 10) {
+        if (GC.delta > GC.interval) {
+            GC.then = GC.now - (GC.delta % GC.interval);
+
+            let curBrowserWidth = parseInt($(window).width());
+            let curBrowserHeight = parseInt($(window).height());
+
+            /** Update card sizes and positions */
+            if ( curBrowserWidth !== GC.browserSize.width || curBrowserHeight !== GC.browserSize.height ) {
                 GC.browserSize = {width: curBrowserWidth, height: curBrowserHeight};
                 // Reposition and adjust all gamefield components
                 GC.CardsController.rerenderGamefield();
+                GC.CardsController.updateTrayAreaCardsPositions();
             }
         }
 

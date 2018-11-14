@@ -14,7 +14,7 @@ if (typeof Array.prototype.reIndexOf === 'undefined') {
                 collection.push(this[i]);
             }
         }
-        return (collection.length > 0) ? collection : -1;
+        return collection;
     };
 }
 
@@ -58,6 +58,7 @@ CC.init = function(matchConfig) {
     CC.cardRegistry = [];
     // Semantic position infos
     CC.semanticPosInfos = [];
+    CC.semanticPosCreationOrder = [];
     // Setup default semantic registry
     CC.semanticPosInfos["unused_stack"] = [];
     // Setup default card info object for each card and add it to default semantic registry
@@ -188,7 +189,7 @@ CC.addFirstCardToTrayStack = function(picture) {
     deckCard.picture = picture;
     let trayStackPos = {top: $(".drop-staple").css("top"), left: $(".drop-staple").css("left")};
     deckCard.pos = trayStackPos;
-    CC.moveCard(deckCard, {target: "tray_area_stack_1", new_order: [1]});
+    CC.moveCard(deckCard, {semantic_pos: "tray_stack", new_order: [1]});
 
     // Update semantic position for new tray stack card
     CC.cardRegistry[deckCard.id].semantic_pos = "tray_stack";
@@ -229,43 +230,469 @@ CC.getCardFromDeck = function() {
     }
 }
 
-CC.generateCoordinatesFor = function(card, settings) {
+CC.setCoordinatesFor = function(card, settings) {
 
-    let trayStackAreaExists = false;
+    // Get ids of all tray area stacks
     let trayStackAreaIds = Object.keys(CC.semanticPosInfos).reIndexOf(/tray_area_stack/);
 
-    for (let i=0; i<trayStackAreaIds.length; i++) {
-        if (settings.semantic_pos === CC.semanticPosInfos[trayStackAreaIds[i]]) {
-            trayStackAreaExists = true;
-        }
+    // Check if related tray area stack exists and set flag
+    let trayStackAreaExists = false;
+
+    if (CC.semanticPosInfos[settings.semantic_pos]) {
+        trayStackAreaExists = true;
     }
 
-    if (trayStackAreaExists && trayStackAreaIds.length > 0) {
+    console.log("------------ setCoordinatesFor -------------");
+
+    // In case there is no tray area stack yet
+    if (!trayStackAreaExists && trayStackAreaIds.length === 0) {
+
+        // Get the current position and size of the tray area
+        let trayAreaPos = {left: parseInt($(".tray-area").css("left")), top: parseInt($(".tray-area").css("top"))};
+        let trayAreaSize = {width: $(".tray-area").width(), height: $(".tray-area").height()};
+        console.log(trayAreaSize);
+        console.log(trayAreaPos);
+        // Now calculate the position for the card by respecting the size of a card and the related cards within this new tray area stack
+        let top = (trayAreaSize.height / 2) - (CC.cardHeight / 2) + trayAreaPos.top;
+        let left = (trayAreaSize.width / 2) - (CC.cardWidth / 2) + trayAreaPos.left - ((settings.new_order.indexOf(card.id))*25) / 2;
+
+        CC.cardRegistry[card.id].pos = {top: top, left: left};
+
+        return {top: top, left: left};
+
+    // In case the tray area stack does not exist, but atleast one other tray area stack exists.
+    } else if (!trayStackAreaExists && trayStackAreaIds.length > 0) {
+        console.log("triggered");
         // Get very last card of the last tray stack area
-        // We check its position, and if there is enough for one card until hitting the boundry of tray stack area
-        // we have our x and y value
+        console.log("--------------------- semantic pos infos -------------------");
+        console.log(CC.semanticPosInfos);
         let veryLastCard = CC.semanticPosInfos[ trayStackAreaIds[trayStackAreaIds.length-1] ][CC.semanticPosInfos[ trayStackAreaIds[trayStackAreaIds.length-1] ].length-1];
-        if (veryLastCard.pos.left + CC.cardWidth + 50 <= parseInt($(".tray-area").width())+parseInt($(".tray-area").css("left"))) {
-            console.log("x will be: " + (veryLastCard.pos.left + CC.cardWidth + 50));
+
+        // In case card still fits into the row of the previous tray area stack
+        console.log(veryLastCard);
+        console.log((parseInt($("#card-" + veryLastCard.id).css("left")) + " + " +(2*CC.cardWidth) + " + " + 70));
+        console.log(veryLastCard.pos);
+
+        let cardsInRows = CC.generateTrayAreaRegistry();
+        let idx = CC.generateUniqueHashFromNumber(Math.abs(veryLastCard.pos.top + 145));
+
+        let count = 0;
+        console.log(veryLastCard.semantic_pos + " and " + settings.semantic_pos);
+        for (let i=1; i<CC.cardRegistry.length; i++) {
+            if (CC.cardRegistry[i].semantic_pos === veryLastCard.semantic_pos) {
+                count++;
+            }
+        }
+
+        count += settings.new_order.length-1;
+
+        console.log(((2*CC.cardWidth) + 70 + (count-1)*25) + "<=" + (parseInt($(".tray-area").width())));
+
+        console.log((2*CC.cardWidth) + 70 + (count-1)*25);
+        console.log((2*CC.cardWidth) + " + 70 + " + (count-1)*25);
+
+        if ((2*CC.cardWidth) + 70 + (count-1)*25 <= parseInt($(".tray-area").width())) {
+            console.log("x will be: " + (veryLastCard.pos.left + CC.cardWidth + 70));
             console.log("y will be: " + (veryLastCard.pos.top));
+
+            let left = veryLastCard.pos.left + CC.cardWidth + 70;
+            let top = veryLastCard.pos.top;
+
+            CC.cardRegistry[card.id].pos = {top: top, left: left};
+
+            return {top: top, left: left};
 
         // Seems not fit in this last row any more, so we begin a new row and trigger resizing for all tray area stacks
         } else {
-            console.log("x will be: " + parseInt($(".tray-area").css("left")) + 20);
-            console.log("y will be: " + (veryLastCard.pos.top + CC.cardHeight + 20));
-            console.log(veryLastCard.pos.left + CC.cardWidth + 20 + CC.cardWidth + "<=" + parseInt($(".tray-area").width())+parseInt($(".tray-area").css("left")));
+
+            // If there is no tray area stack in this row, we position this card right into the middle
+            if (!cardsInRows[idx]) {
+                console.log("triggered 2");
+                let trayAreaPos = {left: parseInt($(".tray-area").css("left")), top: parseInt($(".tray-area").css("top"))};
+                let trayAreaSize = {width: $(".tray-area").width(), height: $(".tray-area").height()};
+                let top = (trayAreaSize.height / 2) - (CC.cardHeight / 2) + trayAreaPos.top + 145;
+                let left = (trayAreaSize.width / 2) - (CC.cardWidth / 2) + trayAreaPos.left - ((settings.new_order.length-1)*25) / 2;
+
+                CC.cardRegistry[card.id].pos = {top: top, left: left};
+
+                return {top: top, left: left};
+
+            // If there is already a tray area stack in this row
+            } else {
+                console.log("triggered 3");
+                console.log(veryLastCard.id);
+                let left = parseInt(("#card-" + veryLastCard.id).css("left")) + CC.cardWidth + 70;
+                let top = veryLastCard.pos.top;
+
+                CC.cardRegistry[card.id].pos = {top: top, left: left};
+
+                return {top: top, left: left};
+            }
         }
-    // Here it becomes quite more difficult
-    // The tray stack already exists, so we need to calculate the position and trigger repositioning for all affected stacks/cards in tray area
-    } else {
-        let calcFactor = settings.new_order.indexOf(card.id)+1;
 
+    // In case the tray area stack exists, so we need to calculate the position based on the first card in this tray area stack
+    } else if (trayStackAreaExists) {
+        let calcFactor = settings.new_order.indexOf(card.id);
+        // Get position of the first card within the related tray area stack
+        let firstCard = CC.cardRegistry[settings.new_order[0]];
 
+        let left = firstCard.pos.left + (calcFactor * CC.optimalDistanceBetweenCardsAtOpponentsHand);
+        let top = firstCard.pos.top;
+
+        CC.cardRegistry[card.id].pos = {top: top, left: left};
+
+        return {top: top, left: left};
     }
 
 }
 
+CC.generateUniqueHashFromNumber = function(number) {
+    number = parseInt(number);
+    let alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
+    let remainding = number % 26;
+    let multiplier = (number - remainding) / 26;
+    let hash = alphabet[multiplier] + alphabet[parseInt(remainding)];
+
+    return hash;
+
+}
+
+CC.generateTrayAreaRegistry = function() {
+    let re = new RegExp(/tray_area_stack/);
+    let cardsInRows = [];
+    for (let i=1; i<CC.cardRegistry.length; i++) {
+        if (re.test(CC.cardRegistry[i].semantic_pos)) {
+            let idx = CC.generateUniqueHashFromNumber(Math.abs(CC.cardRegistry[i].pos.top));
+            if (!cardsInRows[idx]) {
+                cardsInRows[idx] = [];
+            }
+            if (!cardsInRows[idx][CC.cardRegistry[i].semantic_pos]) {
+                cardsInRows[idx][CC.cardRegistry[i].semantic_pos] = [];
+            }
+            cardsInRows[idx][CC.cardRegistry[i].semantic_pos].push(CC.cardRegistry[i].id);
+        }
+    }
+
+    return cardsInRows;
+}
+
+CC.updateTrayAreaCardsPositions = function() {
+
+    // First generate a array representation for the rows and its containing stacks and cards
+    let cardsInRows = CC.generateTrayAreaRegistry();
+
+    let tempCopys = [];
+
+    for (let i=0; i<CC.semanticPosCreationOrder.length; i++) {
+        for (let rowIdx=0; rowIdx<Object.keys(cardsInRows).length; rowIdx++) {
+            let idx = Object.keys(cardsInRows)[rowIdx];
+
+            for (let x=0; x<Object.keys(cardsInRows[idx]).length; x++) {
+                if (Object.keys(cardsInRows[idx])[x] === CC.semanticPosCreationOrder[i]) {
+                    if (!tempCopys[idx]) {
+                        tempCopys[idx] = [];
+                    }
+                    tempCopys[idx].push(cardsInRows[idx][CC.semanticPosCreationOrder[i]]);
+                }
+            }
+
+        }
+    }
+
+    console.log(tempCopys);
+
+    // Calculate and save row lengths
+    let rowLengths = [];
+    console.log("------------------- calc row length ----------------------");
+    for (let rowIdx=0; rowIdx<Object.keys(cardsInRows).length; rowIdx++) {
+        let idx = Object.keys(cardsInRows)[rowIdx];
+        let length = 0;
+        console.log(Object.keys(cardsInRows[idx]));
+        for (let stackIdx=0; stackIdx < tempCopys[idx].length; stackIdx++) {
+            length += CC.cardWidth;
+            length += 70;
+            length += (cardsInRows[idx][ Object.keys(cardsInRows[idx])[stackIdx] ].length - 1) * CC.optimalDistanceBetweenCardsAtOpponentsHand;
+        }
+        length -= 70;
+        rowLengths.push(length);
+    }
+
+    for (let x=0; x<rowLengths.length; x++) {
+        // Check row lengths
+        if (rowLengths[x] > $(".tray-area").width()) {
+            console.log("Row " + (x + 1) + " is to big");
+
+            let sortedCardIds = [];
+            let reversedCreationOrder = CC.semanticPosCreationOrder; //.reverse();
+            let trayAreaStackName = "";
+
+            for (let i = 0; i < reversedCreationOrder.length; i++) {
+                if (cardsInRows[Object.keys(cardsInRows)[x]][reversedCreationOrder[i]]) {
+                    trayAreaStackName = reversedCreationOrder[i];
+                }
+            }
+
+            console.log("trayAreaStackName");
+            console.log(trayAreaStackName);
+
+            for (let i = 1; i < CC.cardRegistry.length; i++) {
+                if (CC.cardRegistry[i].semantic_pos === trayAreaStackName) {
+                    sortedCardIds.push(i);
+                }
+            }
+
+            sortedCardIds = sortedCardIds.sort((a, b) => {
+                if (CC.cardRegistry[a].order_pos < CC.cardRegistry[b].order_pos) {
+                    return -1;
+                }
+                return 1;
+            });
+
+            let currentTop = parseInt($("#card-" + CC.cardRegistry[sortedCardIds[0]].id).css("top"));
+            // Get tray area stacks within the targeted row if there exist some
+            let cardsInRowsIdx = CC.generateUniqueHashFromNumber(currentTop + 145);
+
+            if (!cardsInRows[cardsInRowsIdx]) {
+                for (let i = 0; i < sortedCardIds.length; i++) {
+                    // Calculate new top
+                    let top = CC.cardRegistry[sortedCardIds[i]].pos.top + 145;
+                    let left;
+                    CC.cardRegistry[sortedCardIds[i]].pos.top = CC.cardRegistry[sortedCardIds[i]].pos.top + 145;
+
+                    /** Calculate new left */
+
+
+                    console.log("there are no other tray area stacks in targeted row");
+
+                    // Iterate over each card of this tray area stack and reposition it to target row
+                    // First get ids and order of them
+                    let cardsInfos = [];
+                    for (let x = 1; x < CC.cardRegistry.length; x++) {
+                        if (CC.cardRegistry[x].semantic_pos === CC.cardRegistry[sortedCardIds[i]].semantic_pos) {
+                            cardsInfos.push({id: x, order: CC.cardRegistry[x].order_pos});
+                        }
+                    }
+
+                    // Now sort by order
+                    cardsInfos = cardsInfos.sort((a, b) => {
+                        if (a.order_pos < b.order_pos) {
+                            return -1;
+                        }
+                        return 1;
+                    });
+
+                    console.log("check check");
+                    console.log(cardsInfos);
+
+                    // Iterate over them and manipulate
+                    for (let x = 0; x < cardsInfos.length; x++) {
+                        left = parseInt($(".tray-area").css("left")) + ($(".tray-area").width()/2) - (CC.cardWidth/2) - ((cardsInfos.length - 1) * 25) + (x * 25);
+                        console.log("new left -------------------------");
+                        console.log($(".tray-area").css("left") + " + " + ($(".tray-area").width()/2) + " - " + (CC.cardWidth/2) + " - " + ((cardsInfos.length - 1) * 25) + " + " +  (x * 25));
+                        console.log(cardsInfos[x].id);
+                        // Reposition
+                        $("#card-" + cardsInfos[x].id).animate({top: top, left: left, zIndex: (x + 1)}, 500);
+
+                        CC.cardRegistry[cardsInfos[x].id].pos = {top: top, left: left};
+                    }
+                }
+
+            } else {
+
+                sortedCardIds = [];
+                reversedCreationOrder = CC.semanticPosCreationOrder; //.reverse();
+                trayAreaStackName = "";
+
+                for (let i = 0; i < reversedCreationOrder.length; i++) {
+                    if (cardsInRows[Object.keys(cardsInRows)[x]][reversedCreationOrder[i]]) {
+                        trayAreaStackName = reversedCreationOrder[i];
+                    }
+                }
+
+                console.log("trayAreaStackName");
+                console.log(trayAreaStackName);
+
+                for (let i = 1; i < CC.cardRegistry.length; i++) {
+                    if (CC.cardRegistry[i].semantic_pos === trayAreaStackName) {
+                        sortedCardIds.push(i);
+                    }
+                }
+
+                sortedCardIds = sortedCardIds.sort((a, b) => {
+                    if (CC.cardRegistry[a].order_pos < CC.cardRegistry[b].order_pos) {
+                        return -1;
+                    }
+                    return 1;
+                });
+
+                let top = CC.cardRegistry[sortedCardIds[0]].pos.top + 145;
+                let left;
+
+                let existingStacksByName = Object.keys(cardsInRows[cardsInRowsIdx])
+
+                // Sort the existing stacks in order of they were beeing added to the tray area
+                existingStacksByName = existingStacksByName.sort((a, b) => {
+                    if (CC.semanticPosCreationOrder.indexOf(a) < CC.semanticPosCreationOrder.indexOf(b)) {
+                        return -1;
+                    }
+                    return 1;
+                });
+
+                // Count total cards in this row
+                let totalCards = 0;
+                totalCards += existingStacksByName.map( (a) => {
+                    for (let c=1; c<CC.cardRegistry.length; c++) {
+                        if (CC.cardRegistry[c].semantic_pos === a) {
+                            return 1;
+                        }
+                        return 0;
+                    }
+                } ).reduce( (accu, curVal) => {
+                    return accu + curVal;
+                } );
+                console.log("total cards --------------------------------");
+                console.log(totalCards);
+
+                for (let y = 0; y < existingStacksByName.length; y++) {
+                    for (let a = 0; a < sortedCardIds.length; a++) {
+                        // Iterate over each card of this tray area stack and reposition it to target row
+                        // First get ids and order of them
+                        let cardsInfos = [];
+                        for (let z = 1; z < CC.cardRegistry.length; z++) {
+                            if (CC.cardRegistry[z].semantic_pos === CC.cardRegistry[sortedCardIds[a]].semantic_pos) {
+                                cardsInfos.push({id: z, order: CC.cardRegistry[z].order_pos});
+                            }
+                        }
+
+                        console.log("----------------------------- cardsinfos");
+                        console.log(cardsInfos);
+
+                        // Now sort by order
+                        cardsInfos = cardsInfos.sort((a, b) => {
+                            if (a.order_pos < b.order_pos) {
+                                return -1;
+                            }
+                            return 1;
+                        });
+
+                        console.log("check check");
+                        console.log(cardsInfos);
+
+                        // Iterate over them and manipulate
+                        for (let b = 0; b < cardsInfos.length; b++) {
+
+                            let totalRowWidth = ((existingStacksByName.length - 1) * 70) + ((totalCards-existingStacksByName)*25) + (existingStacksByName*CC.cardWidth);
+                            let leftgap =  (parseInt($(".tray-area").css("left")) + $(".tray-area").width()) -  totalRowWidth; //- ( (y*70) + CC.cardWidth + (b*25) )
+
+                            left = leftgap + ( (y*70) + CC.cardWidth + (b*25) );
+
+                            // Reposition
+                            $("#card-" + cardsInfos[b].id).animate({top: top, left: left, zIndex: (cardsInfos.length - b)}, 500);
+
+                            CC.cardRegistry[cardsInfos[b].id].pos = {top: top, left: left};
+                        }
+
+                    }
+
+                }
+            }
+        }
+    }
+    console.log("--- sem pos ------");
+    console.log(CC.semanticPosCreationOrder);
+
+    // Recenter rows
+    // Rows
+    for (let i=0; i<rowLengths.length; i++) {
+
+        let firstCardIsUpdated = false;
+
+        // Sequentaly update each card position for this row
+        for (let rowIdx=0; rowIdx<Object.keys(cardsInRows).length; rowIdx++) {
+            // Calculate new gap from left
+            let newGapFromLeft = ($(".tray-area").width() - rowLengths[rowIdx]) / 2;
+
+            console.log("newgap row " + rowIdx + ": " + newGapFromLeft);
+
+            let idx = Object.keys(cardsInRows)[rowIdx];
+
+            // Stacks
+            let previousStackLastCardId;
+            for (let stackIdx=0; stackIdx < tempCopys[idx].length; stackIdx++) {
+                let base;
+                if (previousStackLastCardId) {
+                    base = parseInt($("#card-" + previousStackLastCardId).css("left")) + 86 + 70;
+                } else {
+                    base = (newGapFromLeft + parseInt($(".tray-area").css("left")));
+                }
+
+                // Cards
+
+                let sortedCardIds = [];
+                for (let i=1; i<CC.cardRegistry.length; i++) {
+                    if (CC.cardRegistry[i].semantic_pos === CC.cardRegistry[tempCopys[idx][stackIdx][0]].semantic_pos) {
+                        sortedCardIds.push(i);
+                    }
+                }
+
+                sortedCardIds = sortedCardIds.sort((a, b) => {
+                    if (CC.cardRegistry[a].order_pos < CC.cardRegistry[b].order_pos) {
+                        return -1;
+                    }
+                    return 1;
+                });
+
+                console.log("------- sorted ids ----------");
+                console.log(sortedCardIds);
+
+                for (let y=0; y<sortedCardIds.length; y++) {
+                    let cardId = sortedCardIds[y];
+
+                    console.log("stack no: " + (tempCopys[idx].length - stackIdx) + " cards: " + sortedCardIds.length);
+
+
+                    if (!firstCardIsUpdated) {
+                        $("#card-" + cardId).css("left", (newGapFromLeft + parseInt($(".tray-area").css("left")))).css("z-index", (y+1));
+                        CC.cardRegistry[cardId].pos.left = (newGapFromLeft + parseInt($(".tray-area").css("left")));
+                        firstCardIsUpdated = true;
+                    } else {
+                        $("#card-" + cardId).css("left", base + (y * 25)).css("z-index", (y+1));
+                        CC.cardRegistry[cardId].pos.left = base + (y*25);
+                    }
+
+                    previousStackLastCardId = cardId;
+                }
+            }
+
+        }
+
+    }
+
+
+}
+
 CC.moveCard = function(card, options) {
+
+    // Add the card to the semantic registry
+    if (CC.semanticPosInfos[options.semantic_pos]) {
+        let found = false;
+        for (let i=0; i<CC.semanticPosInfos[options.semantic_pos].length; i++) {
+            if (CC.semanticPosInfos[options.semantic_pos][i].id === card.id) {
+                found = true;
+            }
+        }
+        if (!found) {
+            CC.semanticPosInfos[options.semantic_pos].push(card);
+        }
+    } else {
+        console.log(card.semantic_pos + " erstellt");
+        CC.semanticPosInfos[options.semantic_pos] = [];
+        CC.semanticPosInfos[options.semantic_pos].push(card);
+        CC.semanticPosCreationOrder.push(options.semantic_pos);
+    }
+
+    /** Update order position for card */
+    CC.cardRegistry[card.id].order_pos = options.new_order.indexOf(card.id) + 1;
 
     /** Inject card picture into card element */
     if (!card.revealed) {
@@ -276,9 +703,11 @@ CC.moveCard = function(card, options) {
             .css("background-position", "center");
     }
 
-    /** Remove current semantic registry entry of this card info object if it exists */
-    console.log("-----");
-    console.log( card.semantic_pos);
+    /** Remove card from semantic registry if it exists there. We will link this card later with its new semantic position again */
+    console.log("--- moveCard ---");
+    console.log("new semantic position of card to move: " + options.semantic_pos);
+
+    // Search card in semantic registry and remove from there
     if (CC.semanticPosInfos[card.semantic_pos]) {
         for (let i = 0; i < CC.semanticPosInfos[card.semantic_pos].length; i++) {
             if (CC.semanticPosInfos[card.semantic_pos][i].id === card.id) {
@@ -287,18 +716,17 @@ CC.moveCard = function(card, options) {
         }
     }
 
-    let x = 0;
-    // Update the order position of the remaining card info objects in this semantic registry set
+    // Set semantic position to the card object
+    CC.cardRegistry[card.id].semantic_pos = options.semantic_pos;
+
+    // This should not be done in here => should be in a extra update function after the move has finished
+    // Update the order position of the card info objects in this semantic registry set
     for (let i=1; i<CC.cardRegistry.length; i++) {
-        if (CC.cardRegistry[i].semantic_pos === card.semantic_pos && CC.cardRegistry[i].id !== card.id) {
-            x++;
-            CC.cardRegistry[i].order_pos = x;
+        if (CC.cardRegistry[i].semantic_pos === card.semantic_pos) {
+            CC.cardRegistry[i].order_pos = (options.new_order.indexOf(CC.cardRegistry[i].id)+1);
+            $("#card-" + CC.cardRegistry[i].id).css("z-index", (options.new_order.indexOf(CC.cardRegistry[i].id)+1));
         }
     }
-
-    /** Update the card info object with its new coordinates, semantic position and order position */
-    card.order_pos = (options.new_order.indexOf(card.id) + 1);
-    let test = CC.generateCoordinatesFor(card, options);
 
     /** Animate card to new position after a short 100ms delay because card picture injection may not be finished yet */
     setTimeout(function(){
@@ -319,6 +747,26 @@ CC.moveCard = function(card, options) {
 CC.moveCardToPos = function(card, options) {
     // Set default options object if no options are submitted
     options = options ? options : { delay: 0, cb: false };
+
+    console.log("--- moveCardToPos ---");
+
+    // Add the card info object to the semantic position registry
+    if (CC.semanticPosInfos[card.semantic_pos]) {
+        let found = false;
+        for (let i=0; i<CC.semanticPosInfos[card.semantic_pos].length; i++) {
+            if (CC.semanticPosInfos[card.semantic_pos][i].id === card.id) {
+                found = true;
+            }
+        }
+        if (!found) {
+            CC.semanticPosInfos[card.semantic_pos].push(card);
+        }
+    } else {
+        console.log(card.semantic_pos + " erstellt");
+        CC.semanticPosInfos[card.semantic_pos] = [];
+        CC.semanticPosInfos[card.semantic_pos].push(card);
+        CC.semanticPosCreationOrder.push(card.semantic_pos);
+    }
 
     // Perform animation
     $("#card-" + card.id )
@@ -362,28 +810,17 @@ CC.moveCardToPos = function(card, options) {
             easing: "easeInOutCirc",
             // Apply interaction Event Handlers for card if its players card
             complete: function() {
-                // Add the card info object to the semantic position registry
-                if (CC.semanticPosInfos[card.semantic_pos]) {
-                    let found = false;
-                    for (let i=0; i<CC.semanticPosInfos[card.semantic_pos].length; i++) {
-                        if (CC.semanticPosInfos[card.semantic_pos][i].id === card.id) {
-                            found = true;
-                        }
-                    }
-                    if (!found) {
-                        CC.semanticPosInfos[card.semantic_pos].push(card);
-                    }
-                } else {
-                    console.log(card.semantic_pos + " erstellt");
-                    CC.semanticPosInfos[card.semantic_pos] = [card];
-                }
-
                 // Trigger a directly to this function passed callback if there was one received
                 if (options.cb) {options.cb();}
                 // Trigger the appropriate callbacks
                 CC.onCardMoved(card);
                 // Update the card elemnents z-index
                 $("#card-" + card.id).css("z-index", card.id);
+
+                let re = new RegExp(/tray_area_stack/g);
+                if (re.test(card.semantic_pos)) {
+                    CC.updateTrayAreaCardsPositions();
+                }
             }
         });
 
