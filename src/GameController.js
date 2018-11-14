@@ -153,10 +153,10 @@ GC.onCardDistributionFinished = (cardRegistry) => {
     });
 }
 
-GC.onPlayerCardDistributed = function(cardInfo) {
+GC.onPlayerCardDistributed = function(card) {
     console.log("player received a card in distribution phase");
 
-    GC.applyPlayerCardEventHandlers(cardInfo.id);
+    GC.applyPlayerCardEventHandlers(card.id);
 }
 
 GC.onTopReceivedAll = function() {

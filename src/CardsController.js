@@ -53,7 +53,7 @@ CC.init = function(matchConfig) {
         "opponent_hand_right": 0,
     };
     // Temporarily saves card info objects for every distributed card
-    CC.distributedCardsInfos = [];
+    CC.distributedCards = [];
     // Will hold every card info object
     CC.cardRegistry = [];
     // Semantic position infos
@@ -99,34 +99,34 @@ CC.distribute = function() {
         // Distribute all cards to the related player
         for (let cardNo=1; cardNo<=CC.matchConfig.cardsPerPlayer; cardNo++) {
             // Get card object from deck
-            let cardInfo = CC.getCardInfoFromDeck();
+            let card = CC.getCardFromDeck();
 
             // Set card sub id
-            cardInfo.subId = CC.matchConfig.cardsPerPlayer-cardNo;
+            card.subId = CC.matchConfig.cardsPerPlayer-cardNo;
 
             // Set semantic position
-            cardInfo.semantic_pos = CC.matchConfig.users[userIdx].table_pos;
+            card.semantic_pos = CC.matchConfig.users[userIdx].table_pos;
 
             // Add card info object to semantic registry
-            if (!CC.semanticPosInfos[cardInfo.semantic_pos]) {
-                CC.semanticPosInfos[cardInfo.semantic_pos] = [];
-                cardInfo.order_pos = CC.semanticPosInfos[cardInfo.semantic_pos].length;
+            if (!CC.semanticPosInfos[card.semantic_pos]) {
+                CC.semanticPosInfos[card.semantic_pos] = [];
+                card.order_pos = CC.semanticPosInfos[card.semantic_pos].length;
             } else {
-                CC.semanticPosInfos[cardInfo.semantic_pos].push(cardInfo);
-                cardInfo.order_pos = CC.semanticPosInfos[cardInfo.semantic_pos].length;
+                CC.semanticPosInfos[card.semantic_pos].push(card);
+                card.order_pos = CC.semanticPosInfos[card.semantic_pos].length;
             }
 
             // Calculate position for this card
-            cardInfo.pos = CC.calculateCardPosition(cardInfo);
+            card.pos = CC.calculateCardPosition(card);
 
             // Calculate delay and set it
-            let options = {delay: (userIdx * CC.delayBetweenDitributions) + (CC.sequentialDelayBetweenEachCardAnimation * parseInt(cardInfo.id))};
+            let options = {delay: (userIdx * CC.delayBetweenDitributions) + (CC.sequentialDelayBetweenEachCardAnimation * parseInt(card.id))};
 
             // Initialize the animation
-            CC.moveCardToPos(cardInfo, options);
+            CC.moveCardToPos(card, options);
 
             // Mark/save the card info object as distributed so we can work with it later on in a cb after distribution finished
-            CC.distributedCardsInfos.push(cardInfo);
+            CC.distributedCards.push(card);
         }
 
         // Set flag that the related player received all its cards
@@ -139,22 +139,22 @@ CC.distribute = function() {
 
 /**
  * Calculates the card position based on its semantic and order position
- * @param cardInfo
+ * @param card
  * @returns {{top: *, left: *}}
  */
-CC.calculateCardPosition = function(cardInfo) {
+CC.calculateCardPosition = function(card) {
     let top, left;
 
-    switch(cardInfo.semantic_pos) {
+    switch(card.semantic_pos) {
         case "player_hand":
             // top position
             top = parseInt($(".gamefield").height()) - CC.cardHeight - CC.bottomHandPosAdjust;
             // left position
-            left = (cardInfo.order_pos+1) * CC.distanceBetweenCardsAtHand + CC.gapToFirstHorizontalCard;
+            left = (card.order_pos+1) * CC.distanceBetweenCardsAtHand + CC.gapToFirstHorizontalCard;
             break;
         case "opponent_hand_left":
             // top position
-            top = cardInfo.order_pos * CC.distanceBetweenCardsAtOpponentsHandY + CC.gapToFirstOppVerticalCard;
+            top = card.order_pos * CC.distanceBetweenCardsAtOpponentsHandY + CC.gapToFirstOppVerticalCard;
             // left position
             left = CC.leftHandPosAdjust;
             break;
@@ -162,11 +162,11 @@ CC.calculateCardPosition = function(cardInfo) {
             // top position
             top = CC.topHandPosAdjust;
             // left position
-            left = (cardInfo.order_pos+1) * CC.distanceBetweenCardsAtOpponentsHandX + CC.gapToFirstOppHorizontalCard;
+            left = (card.order_pos+1) * CC.distanceBetweenCardsAtOpponentsHandX + CC.gapToFirstOppHorizontalCard;
             break;
         case "opponent_hand_right":
             // top position
-            top = cardInfo.order_pos * CC.distanceBetweenCardsAtOpponentsHandY + CC.gapToFirstOppVerticalCard;
+            top = card.order_pos * CC.distanceBetweenCardsAtOpponentsHandY + CC.gapToFirstOppVerticalCard;
             // left position
             left = parseInt($(".gamefield").width()) - CC.rightHandPosAdjust;
             break;
@@ -183,7 +183,7 @@ CC.calculateCardPosition = function(cardInfo) {
 
 CC.addFirstCardToTrayStack = function(picture) {
     // Get the card object for the very first card on the deck
-    let deckCard = CC.getCardInfoFromDeck();
+    let deckCard = CC.getCardFromDeck();
     deckCard.semantic_move = "deck_to_tray_stack";
     deckCard.picture = picture;
     let trayStackPos = {top: $(".drop-staple").css("top"), left: $(".drop-staple").css("left")};
@@ -201,19 +201,19 @@ CC.addFirstCardToTrayStack = function(picture) {
     });
 }
 
-CC.onFirstDeckToTrayStackCard = function(cardInfo) {
+CC.onFirstDeckToTrayStackCard = function(card) {
     // Animates the flip
-    $("#card-" + cardInfo.id).find(".card").addClass("is-flipped");
+    $("#card-" + card.id).find(".card").addClass("is-flipped");
     // Adds click event to the new tray stack card
-    $('#card-' + cardInfo.id).click(function() {
+    $('#card-' + card.id).click(function() {
         alert("picked");
     });
 
     /** Has to be exluded from here since its not related to this function... */
     // Makes the very top deck and tray stack card shine
-    $("#card-" + cardInfo.id).find(".card").addClass("highlight-card");
-    cardInfo = CC.getCardInfoFromDeck();
-    $("#card-" + cardInfo.id).find(".card").addClass("highlight-card");
+    $("#card-" + card.id).find(".card").addClass("highlight-card");
+    card = CC.getCardFromDeck();
+    $("#card-" + card.id).find(".card").addClass("highlight-card");
 }
 
 CC.attachCbOnCardMove = function(cbsInfos) {
@@ -221,7 +221,7 @@ CC.attachCbOnCardMove = function(cbsInfos) {
     CC.onCardMoveCbs = CC.onCardMoveCbs.concat(cbsInfos);
 }
 
-CC.getCardInfoFromDeck = function() {
+CC.getCardFromDeck = function() {
     for (let i=1; i<CC.cardRegistry.length; i++) {
         if (CC.cardRegistry[i].semantic_pos === "unused_stack") {
             return CC.cardRegistry[i];
@@ -229,7 +229,7 @@ CC.getCardInfoFromDeck = function() {
     }
 }
 
-CC.generateCoordinatesFor = function(cardInfo, settings) {
+CC.generateCoordinatesFor = function(card, settings) {
 
     let trayStackAreaExists = false;
     let trayStackAreaIds = Object.keys(CC.semanticPosInfos).reIndexOf(/tray_area_stack/);
@@ -244,45 +244,45 @@ CC.generateCoordinatesFor = function(cardInfo, settings) {
         // Get very last card of the last tray stack area
         // We check its position, and if there is enough for one card until hitting the boundry of tray stack area
         // we have our x and y value
-        let veryLastCardInfo = CC.semanticPosInfos[ trayStackAreaIds[trayStackAreaIds.length-1] ][CC.semanticPosInfos[ trayStackAreaIds[trayStackAreaIds.length-1] ].length-1];
-        if (veryLastCardInfo.pos.left + CC.cardWidth + 50 <= parseInt($(".tray-area").width())+parseInt($(".tray-area").css("left"))) {
-            console.log("x will be: " + (veryLastCardInfo.pos.left + CC.cardWidth + 50));
-            console.log("y will be: " + (veryLastCardInfo.pos.top));
+        let veryLastCard = CC.semanticPosInfos[ trayStackAreaIds[trayStackAreaIds.length-1] ][CC.semanticPosInfos[ trayStackAreaIds[trayStackAreaIds.length-1] ].length-1];
+        if (veryLastCard.pos.left + CC.cardWidth + 50 <= parseInt($(".tray-area").width())+parseInt($(".tray-area").css("left"))) {
+            console.log("x will be: " + (veryLastCard.pos.left + CC.cardWidth + 50));
+            console.log("y will be: " + (veryLastCard.pos.top));
 
         // Seems not fit in this last row any more, so we begin a new row and trigger resizing for all tray area stacks
         } else {
             console.log("x will be: " + parseInt($(".tray-area").css("left")) + 20);
-            console.log("y will be: " + (veryLastCardInfo.pos.top + CC.cardHeight + 20));
-            console.log(veryLastCardInfo.pos.left + CC.cardWidth + 20 + CC.cardWidth + "<=" + parseInt($(".tray-area").width())+parseInt($(".tray-area").css("left")));
+            console.log("y will be: " + (veryLastCard.pos.top + CC.cardHeight + 20));
+            console.log(veryLastCard.pos.left + CC.cardWidth + 20 + CC.cardWidth + "<=" + parseInt($(".tray-area").width())+parseInt($(".tray-area").css("left")));
         }
     // Here it becomes quite more difficult
     // The tray stack already exists, so we need to calculate the position and trigger repositioning for all affected stacks/cards in tray area
     } else {
-        let calcFactor = settings.new_order.indexOf(cardInfo.id)+1;
+        let calcFactor = settings.new_order.indexOf(card.id)+1;
 
 
     }
 
 }
 
-CC.moveCard = function(cardInfo, options) {
+CC.moveCard = function(card, options) {
 
     /** Inject card picture into card element */
-    if (!cardInfo.revealed) {
-        cardInfo.revealed = true;
-        $("#card-" + cardInfo.id).find(".card__face--back")
-            .css("background", "url("+cardInfo.picture+") #fff no-repeat")
+    if (!card.revealed) {
+        card.revealed = true;
+        $("#card-" + card.id).find(".card__face--back")
+            .css("background", "url("+card.picture+") #fff no-repeat")
             .css("background-size", "78px 117px")
             .css("background-position", "center");
     }
 
     /** Remove current semantic registry entry of this card info object if it exists */
     console.log("-----");
-    console.log( cardInfo.semantic_pos);
-    if (CC.semanticPosInfos[cardInfo.semantic_pos]) {
-        for (let i = 0; i < CC.semanticPosInfos[cardInfo.semantic_pos].length; i++) {
-            if (CC.semanticPosInfos[cardInfo.semantic_pos][i].id === cardInfo.id) {
-                CC.semanticPosInfos[cardInfo.semantic_pos].splice(cardInfo.order_pos, 1);
+    console.log( card.semantic_pos);
+    if (CC.semanticPosInfos[card.semantic_pos]) {
+        for (let i = 0; i < CC.semanticPosInfos[card.semantic_pos].length; i++) {
+            if (CC.semanticPosInfos[card.semantic_pos][i].id === card.id) {
+                CC.semanticPosInfos[card.semantic_pos].splice(card.order_pos, 1);
             }
         }
     }
@@ -290,23 +290,23 @@ CC.moveCard = function(cardInfo, options) {
     let x = 0;
     // Update the order position of the remaining card info objects in this semantic registry set
     for (let i=1; i<CC.cardRegistry.length; i++) {
-        if (CC.cardRegistry[i].semantic_pos === cardInfo.semantic_pos && CC.cardRegistry[i].id !== cardInfo.id) {
+        if (CC.cardRegistry[i].semantic_pos === card.semantic_pos && CC.cardRegistry[i].id !== card.id) {
             x++;
             CC.cardRegistry[i].order_pos = x;
         }
     }
 
     /** Update the card info object with its new coordinates, semantic position and order position */
-    cardInfo.order_pos = (options.new_order.indexOf(cardInfo.id) + 1);
-    let test = CC.generateCoordinatesFor(cardInfo, options);
+    card.order_pos = (options.new_order.indexOf(card.id) + 1);
+    let test = CC.generateCoordinatesFor(card, options);
 
     /** Animate card to new position after a short 100ms delay because card picture injection may not be finished yet */
     setTimeout(function(){
         // Animates the flip
-        CC.moveCardToPos(cardInfo, {
+        CC.moveCardToPos(card, {
             delay: options.order_pos * 70,
             cb: () => {
-                $("#card-" + cardInfo.id).find(".card").addClass("is-flipped");
+                $("#card-" + card.id).find(".card").addClass("is-flipped");
                 // Reposition the related cards due to changes on related semantic areas
                 CC.rerenderGamefield();
             }
@@ -316,21 +316,21 @@ CC.moveCard = function(cardInfo, options) {
 }
 
 /** Animates a card to given top/left coordinates */
-CC.moveCardToPos = function(cardInfo, options) {
+CC.moveCardToPos = function(card, options) {
     // Set default options object if no options are submitted
     options = options ? options : { delay: 0, cb: false };
 
     // Perform animation
-    $("#card-" + cardInfo.id )
+    $("#card-" + card.id )
         .delay(options.delay)
         .animate({
-            top: cardInfo.pos.top,
-            left: cardInfo.pos.left,
+            top: card.pos.top,
+            left: card.pos.left,
             myRotationProperty: 180
         }, {
             step: function(now, tween) {
                 // Rotates the card if it has to be served to right or left player
-                switch(cardInfo.semantic_pos) {
+                switch(card.semantic_pos) {
                     case "opponent_hand_right":
                         if (tween.prop === "myRotationProperty") {
                             $(this).css('-webkit-transform','rotate('+(now/2)+'deg)');
@@ -363,27 +363,27 @@ CC.moveCardToPos = function(cardInfo, options) {
             // Apply interaction Event Handlers for card if its players card
             complete: function() {
                 // Add the card info object to the semantic position registry
-                if (CC.semanticPosInfos[cardInfo.semantic_pos]) {
+                if (CC.semanticPosInfos[card.semantic_pos]) {
                     let found = false;
-                    for (let i=0; i<CC.semanticPosInfos[cardInfo.semantic_pos].length; i++) {
-                        if (CC.semanticPosInfos[cardInfo.semantic_pos][i].id === cardInfo.id) {
+                    for (let i=0; i<CC.semanticPosInfos[card.semantic_pos].length; i++) {
+                        if (CC.semanticPosInfos[card.semantic_pos][i].id === card.id) {
                             found = true;
                         }
                     }
                     if (!found) {
-                        CC.semanticPosInfos[cardInfo.semantic_pos].push(cardInfo);
+                        CC.semanticPosInfos[card.semantic_pos].push(card);
                     }
                 } else {
-                    console.log(cardInfo.semantic_pos + " erstellt");
-                    CC.semanticPosInfos[cardInfo.semantic_pos] = [cardInfo];
+                    console.log(card.semantic_pos + " erstellt");
+                    CC.semanticPosInfos[card.semantic_pos] = [card];
                 }
 
                 // Trigger a directly to this function passed callback if there was one received
                 if (options.cb) {options.cb();}
                 // Trigger the appropriate callbacks
-                CC.onCardMoved(cardInfo);
+                CC.onCardMoved(card);
                 // Update the card elemnents z-index
-                $("#card-" + cardInfo.id).css("z-index", cardInfo.id);
+                $("#card-" + card.id).css("z-index", card.id);
             }
         });
 
@@ -455,10 +455,10 @@ CC.rerenderGamefield = function() {
 
 /**
  * Refreshes the position and size of a single card
- * @param cardInfo - the object representation of a card
+ * @param card - the object representation of a card
  */
-CC.updateCard = function(cardInfo) {
-    let newPos = CC.calculateCardPosition(cardInfo);
+CC.updateCard = function(card) {
+    let newPos = CC.calculateCardPosition(card);
 
     let unused = 0;
     for (let i=1; i<CC.cardRegistry.length; i++) {
@@ -466,12 +466,12 @@ CC.updateCard = function(cardInfo) {
             unused++;
         }
     }
-    if (cardInfo.semantic_pos === "unused_stack") {
-        newPos.top = newPos.top + (cardInfo.subId*0.2) - (unused*0.2);
-        cardInfo.z_index = 99;
+    if (card.semantic_pos === "unused_stack") {
+        newPos.top = newPos.top + (card.subId*0.2) - (unused*0.2);
+        card.z_index = 99;
     }
 
-    $("#card-" + cardInfo.id)
+    $("#card-" + card.id)
         .css("top", newPos.top)
         .css("left", newPos.left)
         .css("width", CC.cardWidth)
@@ -499,9 +499,9 @@ CC.generateCardElems = function() {
  * Responsible for triggering callbacks which are related with a card move
  * This runs everytime no matter what card is finished moving from a to b
  *
- * @param cardInfo - the object representation of a card
+ * @param card - the object representation of a card
  */
-CC.onCardMoved = function(cardInfo) {
+CC.onCardMoved = function(card) {
 
     /**
      * Trigger various callbacks in the card-distribution phase
@@ -510,7 +510,7 @@ CC.onCardMoved = function(cardInfo) {
         /**
          * Increment the received-cards-counter for the currently affected table position
          */
-        switch (cardInfo.semantic_pos) {
+        switch (card.semantic_pos) {
             case "player_hand":
                 for (let i = 0; i < CC.matchConfig.users.length; i++) {
                     if (CC.matchConfig.users[i].table_pos === 'player_hand') {
@@ -550,26 +550,26 @@ CC.onCardMoved = function(cardInfo) {
             if (CC.onCardMoveCbs[i].condition === "every_card" && CC.onCardMoveCbs[i].on === "distribution") {
                 switch (CC.onCardMoveCbs[i].affected) {
                     case "full_table":
-                        CC.onCardMoveCbs[i].handler(cardInfo);
+                        CC.onCardMoveCbs[i].handler(card);
                         break;
                     case "player_hand":
-                        if (cardInfo.semantic_pos === "player_hand") {
-                            CC.onCardMoveCbs[i].handler(cardInfo);
+                        if (card.semantic_pos === "player_hand") {
+                            CC.onCardMoveCbs[i].handler(card);
                         }
                         break;
                     case "opponent_hand_left":
-                        if (cardInfo.semantic_pos === "opponent_hand_left") {
-                            CC.onCardMoveCbs[i].handler(cardInfo);
+                        if (card.semantic_pos === "opponent_hand_left") {
+                            CC.onCardMoveCbs[i].handler(card);
                         }
                         break;
                     case "opponent_hand_top":
-                        if (cardInfo.semantic_pos === "opponent_hand_top") {
-                            CC.onCardMoveCbs[i].handler(cardInfo);
+                        if (card.semantic_pos === "opponent_hand_top") {
+                            CC.onCardMoveCbs[i].handler(card);
                         }
                         break;
                     case "opponent_hand_right":
-                        if (cardInfo.semantic_pos === "opponent_hand_right") {
-                            CC.onCardMoveCbs[i].handler(cardInfo);
+                        if (card.semantic_pos === "opponent_hand_right") {
+                            CC.onCardMoveCbs[i].handler(card);
                         }
                         break;
                     default:
@@ -581,12 +581,12 @@ CC.onCardMoved = function(cardInfo) {
         /**
          * Triggers if all table positions received their cards and sets the "CC.allCardsHandedOut" flag to true
          */
-        if (cardInfo.id === (CC.matchConfig.cardsPerPlayer * CC.matchConfig.users.length)) {
+        if (card.id === (CC.matchConfig.cardsPerPlayer * CC.matchConfig.users.length)) {
             // Set a flag so we now that all initial cards are handed out
             CC.allCardsHandedOut = true;
             for (let i = 0; i < CC.onCardMoveCbs.length; i++) {
                 if (CC.onCardMoveCbs[i].affected === "full_table" && CC.onCardMoveCbs[i].condition === "finish" && CC.onCardMoveCbs[i].on === "distribution") {
-                    CC.onCardMoveCbs[i].handler(CC.distributedCardsInfos);
+                    CC.onCardMoveCbs[i].handler(CC.distributedCards);
                 }
             }
         }
@@ -634,9 +634,9 @@ CC.onCardMoved = function(cardInfo) {
      */
     for (let i=0; i<CC.onCardMoveCbs.length; i++) {
         // If a card from deck is moved to tray stack
-        if (CC.onCardMoveCbs[i].on === "deck_to_tray_stack" && cardInfo.semantic_move === "deck_to_tray_stack") {
-            if (CC.onCardMoveCbs[i].condition.split(":")[0] === "cardid" && parseInt(CC.onCardMoveCbs[i].condition.split(":")[1]) === cardInfo.id) {
-                CC.onCardMoveCbs[i].handler(cardInfo);
+        if (CC.onCardMoveCbs[i].on === "deck_to_tray_stack" && card.semantic_move === "deck_to_tray_stack") {
+            if (CC.onCardMoveCbs[i].condition.split(":")[0] === "cardid" && parseInt(CC.onCardMoveCbs[i].condition.split(":")[1]) === card.id) {
+                CC.onCardMoveCbs[i].handler(card);
                 if (CC.onCardMoveCbs[i].usage === "one_time") {
                     CC.onCardMoveCbs.splice(i, 1);
                 }
