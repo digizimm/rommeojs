@@ -110,8 +110,8 @@ CC.distribute = function() {
 
             // Add card info object to semantic registry
             if (!CC.semanticPosInfos[card.semantic_pos]) {
-                CC.semanticPosInfos[card.semantic_pos] = [];
-                card.order_pos = CC.semanticPosInfos[card.semantic_pos].length;
+                CC.semanticPosInfos[card.semantic_pos] = [card];
+                card.order_pos = 1;
             } else {
                 CC.semanticPosInfos[card.semantic_pos].push(card);
                 card.order_pos = CC.semanticPosInfos[card.semantic_pos].length;
@@ -151,7 +151,7 @@ CC.calculateCardPosition = function(card) {
             // top position
             top = parseInt($(".gamefield").height()) - CC.cardHeight - CC.bottomHandPosAdjust;
             // left position
-            left = (card.order_pos+1) * CC.distanceBetweenCardsAtHand + CC.gapToFirstHorizontalCard;
+            left = (card.order_pos + 0.5) * CC.distanceBetweenCardsAtHand + CC.gapToFirstHorizontalCard;
             break;
         case "opponent_hand_left":
             // top position
@@ -361,9 +361,6 @@ CC.generateTrayAreaRegistry = function() {
     let re = new RegExp(/tray_area_stack/);
     let cardsInRows = [];
     for (let i=1; i<CC.cardRegistry.length; i++) {
-        if (i == 9) {
-            console.log("top pos of 9: " + $("#card-" + i).css("top"));
-        }
         if (re.test(CC.cardRegistry[i].semantic_pos)) {
             let idx = CC.generateUniqueHashFromNumber(CC.cardRegistry[i].pos.top);
             if (!cardsInRows[idx]) {
@@ -425,16 +422,20 @@ CC.updateTrayAreaCardsPositions = function() {
     // Generate a sorted version of trayAreaRegistry. Ordered by the time they were added to the tray area
     let trayAreaRegistrySorted = CC.getTrayAreaRegistrySorted();
 
+    // Get the current tray area width
+    let trayAreaWidth = $(".tray-area").width();
+
     // Calculate and save the width of each row in the tray area
     let rowWidths = CC.getCurrentTrayAreaRowWidths();
 
     // Iterate over each row and if they are to big, get dirty and rearrange stacks
     for (let x=0; x<rowWidths.length; x++) {
 
-        // In case the current row is to big
-        if (rowWidths[x] > $(".tray-area").width()) {
-            console.log("Row " + (x + 1) + " is to big");
+        // Recalculate and save the width of each row in the tray area
+        let rowWidths = CC.getCurrentTrayAreaRowWidths();
 
+        // In case the current row is to big
+        if (rowWidths[x] > trayAreaWidth) {
             // Get the id/name of the last stack in this row so we can rearrange its position to smaller the row width
             // First get the stack ids/names and reverse the order so the first one is the very last one we have added to tray area
             let reversedCreationOrder = CC.semanticPosCreationOrder; //.reverse();
@@ -442,21 +443,8 @@ CC.updateTrayAreaCardsPositions = function() {
             // Will hold the id/name of the last stack in this row
             let trayAreaStackName = "";
 
-            // Find out the last stack id/name by iterating over this rows stacks until we find the one which was added last to this row
-            for (let i = 0; i < reversedCreationOrder.length; i++) {
-                if (trayAreaRegistry[Object.keys(trayAreaRegistry)[x]][reversedCreationOrder[i]]) {
-                    trayAreaStackName = reversedCreationOrder[i];
-                }
-            }
-            console.log('name of last stack in row "' + (x+1) + '": ' + trayAreaStackName);
-
             // Now get all the card ids of the cards in this last stack
-            let cardIdsOfLastStack = [];
-            for (let i = 1; i < CC.cardRegistry.length; i++) {
-                if (CC.cardRegistry[i].semantic_pos === trayAreaStackName) {
-                    cardIdsOfLastStack.push(i);
-                }
-            }
+            let cardIdsOfLastStack = trayAreaRegistrySorted[Object.keys(trayAreaRegistrySorted)[x]][ trayAreaRegistrySorted[Object.keys(trayAreaRegistrySorted)[x]].length - 1 ];
 
             // Order them after their order position
             let orderedCardIdsOfLastStack = cardIdsOfLastStack.sort((a, b) => {
@@ -467,20 +455,17 @@ CC.updateTrayAreaCardsPositions = function() {
             });
 
             // Get the row index of the row to which we want to add the last stack of the current row
+            // For that we need to get the "top" position of no matter what card in this row since this "top" value plus the distance to the new row will be the base for
+            // generating the array key for the tray area registry
             let currentTop = parseInt($("#card-" + orderedCardIdsOfLastStack[0]).css("top"));
             let regIdxOfTargetRow = CC.generateUniqueHashFromNumber(currentTop + CC.cardHeight);
-
-            console.log("regIdxOfTargetRow");
-            console.log(regIdxOfTargetRow);
 
             // We take different actions on whether there are stacks in the targeted row or not
             // If there are no other stacks...
             if (!trayAreaRegistrySorted[regIdxOfTargetRow]) {
-                console.log("there are no other tray area stacks in targeted row which has idx: " + regIdxOfTargetRow);
-
                 /** Calculate new top value for the card of the last stack */
                 // First reevaluate the vertical gap to the first row
-                let verticalGap = (($(".tray-area").height() - ((rowWidths.length * CC.cardHeight) + ((rowWidths.length-1) * 20))) / 2) + parseInt($(".tray-area").css("top"));
+                let verticalGap = (($(".tray-area").height() - ((rowWidths.length * CC.cardHeight) + ((rowWidths.length-1) * 20))) / 2) ;
 
                 // Calculate new top value for the cards based on the vertical gap
                 let top = verticalGap + CC.cardHeight + 20; // gap + first row height + vertical space between card rows
@@ -492,7 +477,7 @@ CC.updateTrayAreaCardsPositions = function() {
                 for (let i = 0; i < orderedCardIdsOfLastStack.length; i++) {
                     // Calcualte new left
                     let left;
-                    left = parseInt($(".tray-area").css("left")) + ($(".tray-area").width()/2) - (CC.cardWidth/2) - ((numberOfCardsInLastStack - 1) * 25) + (x * 25);
+                    left = parseInt($(".tray-area").css("left")) + ($(".tray-area").width()/2) - (CC.cardWidth/2) - ((numberOfCardsInLastStack - 1) * 25) + (i * 25);
 
                     // debug
                     console.log('new position for card id "' + orderedCardIdsOfLastStack[i] + '" is left "' + left + '" top "' + top + '"');
@@ -560,8 +545,6 @@ CC.updateTrayAreaCardsPositions = function() {
                 } ).reduce( (accu, curVal) => {
                     return accu + curVal;
                 } );
-                console.log("total cards --------------------------------");
-                console.log(totalCards);
 
                 for (let y = 0; y < existingStacksByName.length; y++) {
                     for (let a = 0; a < orderedCardIdsOfLastStack.length; a++) {
@@ -574,9 +557,6 @@ CC.updateTrayAreaCardsPositions = function() {
                             }
                         }
 
-                        console.log("----------------------------- cardsinfos");
-                        console.log(cardsInfos);
-
                         // Now sort by order
                         cardsInfos = cardsInfos.sort((a, b) => {
                             if (a.order_pos < b.order_pos) {
@@ -584,9 +564,6 @@ CC.updateTrayAreaCardsPositions = function() {
                             }
                             return 1;
                         });
-
-                        console.log("check check");
-                        console.log(cardsInfos);
 
                         // Iterate over them and manipulate
                         for (let b = 0; b < cardsInfos.length; b++) {
@@ -604,30 +581,66 @@ CC.updateTrayAreaCardsPositions = function() {
                             CC.cardRegistry[cardsInfos[b].id].pos = {top: top, left: left};
                         }
 
-                        // Trigger recentering the tray area rows
-                        CC.recenterTrayAreaRows();
                     }
 
                 }
             }
+        /** See if we can put the first stack of the current row one row up if there is enough place for it */
         } else {
-            // Trigger recentering the tray area rows
-            CC.recenterTrayAreaRows();
+
+            if (x !== 0) {
+                // The stack ids we may want to level up
+                let questionedStackIds = trayAreaRegistrySorted[Object.keys(trayAreaRegistrySorted)[x]][0];
+
+                // Calculating the width of this stack so we can compute with it
+                let questionedStackWidth = CC.cardWidth;
+                questionedStackWidth += (questionedStackIds.length-1) * CC.optimalDistanceBetweenCardsAtOpponentsHand;
+
+                // If there is enough space for this stack, we reposition it to the end of the row above
+                if (trayAreaWidth - rowWidths[x - 1] > questionedStackWidth + 70) {
+
+                    // Get very last card id of the row above so we can easily calculate the new left position
+                    let prevRowLastCardId = trayAreaRegistrySorted[Object.keys(trayAreaRegistrySorted)[x-1]][ trayAreaRegistrySorted[Object.keys(trayAreaRegistrySorted)[x-1]].length - 1 ][ trayAreaRegistrySorted[Object.keys(trayAreaRegistrySorted)[x-1]][ trayAreaRegistrySorted[Object.keys(trayAreaRegistrySorted)[x-1]].length - 1 ].length - 1 ];
+
+                    // Iterate over each questioned card, calculate its position and reposition it
+                    for (let i=0; i<questionedStackIds.length; i++) {
+                        let top = parseInt($("#card-" + prevRowLastCardId).css("top"));
+                        let left = 0;
+
+                        // If its the first card in this stack, we take advantage of knowing the position of the very last card in the row above
+                        if (i===0) {
+                            left = parseInt($("#card-" + prevRowLastCardId).css("left")) + CC.cardWidth + 70;
+                        // For the remaining cards we just add the card distance on top of the first stack card
+                        } else {
+                            left = parseInt($("#card-" + questionedStackIds[i-1]).css("left")) + (i*CC.optimalDistanceBetweenCardsAtOpponentsHand);
+                        }
+
+                        $("#card-" + questionedStackIds[i]).css({top: top, left: left});
+                        CC.cardRegistry[questionedStackIds[i]].pos = {top: top, left: left};
+
+                    }
+
+                }
+            }
+
         }
+
+        // Trigger recentering the tray area rows
+        CC.recenterTrayAreaRows();
     }
 
 }
 
 CC.recenterTrayAreaRows = function() {
-    console.log("-------------------------------");
-    console.log("recenterTrayAreaRows triggered");
+  //  console.log("-------------------------------");
+  //  console.log("recenterTrayAreaRows triggered");
     // Generate a sorted version of trayAreaRegistry. Ordered by the time they were added to the tray area
     let trayAreaRegistrySorted = CC.getTrayAreaRegistrySorted();
 
     // Calculate and save the width of each row in the tray area
     let rowWidths = CC.getCurrentTrayAreaRowWidths();
-    console.log("rowWidths:");
-    console.log(rowWidths);
+  //  console.log("rowWidths:");
+  //  console.log(rowWidths);
     // Recenter rows
     // Rows
     for (let i=0; i<rowWidths.length; i++) {
@@ -707,6 +720,15 @@ CC.moveCard = function(card, options) {
         CC.semanticPosCreationOrder.push(options.semantic_pos);
     }
 
+    /** Update order position of all cards from the old semantic position */
+    for (let i=1; i<CC.cardRegistry.length; i++) {
+        if (CC.cardRegistry[i].semantic_pos === CC.cardRegistry[card.id].semantic_pos) {
+            if (CC.cardRegistry[i].order_pos >= CC.cardRegistry[card.id].order_pos) {
+                CC.cardRegistry[i].order_pos = CC.cardRegistry[i].order_pos - 1;
+            }
+        }
+    }
+
     /** Update order position for card */
     CC.cardRegistry[card.id].order_pos = options.new_order.indexOf(card.id) + 1;
 
@@ -731,6 +753,9 @@ CC.moveCard = function(card, options) {
             }
         }
     }
+
+    /** Remove Event Handlers from the card */
+    $("#card-" + card.id).off("mouseover").off("mouseout").off("click");
 
     // Set semantic position to the card object
     CC.cardRegistry[card.id].semantic_pos = options.semantic_pos;
@@ -778,7 +803,7 @@ CC.moveCardToPos = function(card, options) {
             CC.semanticPosInfos[card.semantic_pos].push(card);
         }
     } else {
-        console.log(card.semantic_pos + " erstellt");
+   //     console.log(card.semantic_pos + " erstellt");
         CC.semanticPosInfos[card.semantic_pos] = [];
         CC.semanticPosInfos[card.semantic_pos].push(card);
         CC.semanticPosCreationOrder.push(card.semantic_pos);
@@ -844,6 +869,7 @@ CC.moveCardToPos = function(card, options) {
 
 /** Reposition and resize all cards */
 CC.rerenderGamefield = function() {
+  //  console.log("rerender triggered");
     // Get the size of the games root container
     let gamefieldSize = { width: $(".gamefield").width(), height: $(".gamefield").height()};
 
@@ -865,14 +891,14 @@ CC.rerenderGamefield = function() {
         let countedCards = (CC.semanticPosInfos[CC.cardRegistry[i].semantic_pos]) ? (CC.semanticPosInfos[CC.cardRegistry[i].semantic_pos].length > CC.matchConfig.cardsPerPlayer) ? CC.matchConfig.cardsPerPlayer : CC.semanticPosInfos[CC.cardRegistry[i].semantic_pos].length + 1 : CC.matchConfig.cardsPerPlayer;
 
         // Set new card-to-card distance for vertical aligned cards
-        if (optCardDistOpp * CC.matchConfig.cardsPerPlayer + CC.cardWidth > gamefieldSize.height - (CC.verticalCardsPadding*2)) {
+        if (optCardDistOpp * (CC.matchConfig.cardsPerPlayer-1) + CC.cardWidth > gamefieldSize.height - (CC.verticalCardsPadding*2)) {
             CC.distanceBetweenCardsAtOpponentsHandY = ((gamefieldSize.height - (CC.verticalCardsPadding*2)) - CC.cardWidth) / (countedCards);
         } else {
             CC.distanceBetweenCardsAtOpponentsHandY = optCardDistOpp;
         }
 
         // Set new card-to-card distance for bottom horizontal aligned cards
-        if (optCardDistPlayer * CC.matchConfig.cardsPerPlayer + CC.cardWidth > gamefieldSize.width - (CC.horizontalCardsPadding*2)) {
+        if (optCardDistPlayer * (CC.matchConfig.cardsPerPlayer-1) + CC.cardWidth > gamefieldSize.width - (CC.horizontalCardsPadding*2)) {
             CC.distanceBetweenCardsAtHand = ((gamefieldSize.width - (CC.horizontalCardsPadding*2)) - CC.cardWidth) / (countedCards);
             if (CC.distanceBetweenCardsAtHand > optCardDistPlayer) {
                 CC.distanceBetweenCardsAtHand = optCardDistPlayer;
@@ -882,7 +908,7 @@ CC.rerenderGamefield = function() {
         }
 
         // Set new card-to-card distance for top horizontal aligned cards
-        if (optCardDistOpp * CC.matchConfig.cardsPerPlayer + CC.cardWidth > gamefieldSize.width - (CC.horizontalCardsPadding*2)) {
+        if (optCardDistOpp * (CC.matchConfig.cardsPerPlayer-1) + CC.cardWidth > gamefieldSize.width - (CC.horizontalCardsPadding*2)) {
             CC.distanceBetweenCardsAtOpponentsHandX = ((gamefieldSize.width - (CC.horizontalCardsPadding*2)) - CC.cardWidth) / (countedCards);
             if (CC.distanceBetweenCardsAtOpponentsHandX > optCardDistOpp) {
                 CC.distanceBetweenCardsAtOpponentsHandX = optCardDistOpp;
@@ -892,9 +918,9 @@ CC.rerenderGamefield = function() {
         }
 
         /** Set distance-to-first-card for vertical and horizontal player cards */
-        CC.gapToFirstHorizontalCard = (parseInt($(".gamefield").width()) - (countedCards * CC.distanceBetweenCardsAtHand + (CC.cardWidth - CC.distanceBetweenCardsAtHand))) / 2 - CC.distanceBetweenCardsAtHand;
-        CC.gapToFirstOppHorizontalCard = (parseInt($(".gamefield").width()) - ((countedCards+1) * CC.distanceBetweenCardsAtOpponentsHandX + (CC.cardWidth - CC.distanceBetweenCardsAtOpponentsHandX))) / 2 - CC.distanceBetweenCardsAtOpponentsHandX;
-        CC.gapToFirstOppVerticalCard = (parseInt($(".gamefield").height()) - (countedCards * CC.distanceBetweenCardsAtOpponentsHandY + (CC.cardWidth - CC.distanceBetweenCardsAtOpponentsHandY))) / 2 - CC.distanceBetweenCardsAtOpponentsHandY;
+        CC.gapToFirstHorizontalCard =($(".gamefield").width() - (countedCards * CC.distanceBetweenCardsAtHand + CC.cardWidth)) / 2 - (CC.distanceBetweenCardsAtHand/2);
+        CC.gapToFirstOppHorizontalCard = ($(".gamefield").width() - ((countedCards+1) * CC.distanceBetweenCardsAtOpponentsHandX + (CC.cardWidth - CC.distanceBetweenCardsAtOpponentsHandX))) / 2 - CC.distanceBetweenCardsAtOpponentsHandX;
+        CC.gapToFirstOppVerticalCard = ($(".gamefield").height() - (countedCards * CC.distanceBetweenCardsAtOpponentsHandY + CC.cardWidth)) / 2 - CC.distanceBetweenCardsAtOpponentsHandY;
 
         /** Reposition and resize the related card */
         CC.updateCard(CC.cardRegistry[i]);

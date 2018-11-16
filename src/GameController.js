@@ -103,7 +103,6 @@ GC.onCardDistributionFinished = (cardRegistry) => {
 
         // Set picture and semantic position for card
         GC.CardsController.cardRegistry[received.moves[0].cardId].picture = received.moves[0].picture;
-        GC.CardsController.cardRegistry[received.moves[0].cardId].semantic_pos = received.moves[0].semantic_pos;
 
         // Move card
         GC.CardsController.moveCard(GC.CardsController.cardRegistry[received.moves[0].cardId], options)
@@ -224,7 +223,7 @@ GC.applyEventHandlers = function(cardRegistry) {
 
 }
 
-GC.fps = 1;
+GC.fps = 60;
 GC.now = null;
 GC.then = Date.now();
 GC.interval = 1000/GC.fps;
